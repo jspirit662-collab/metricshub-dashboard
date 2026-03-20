@@ -366,8 +366,35 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
       <div class="fv" id="fn-s1"></div>
     </div>
 
+    <!-- ── Desglose mensual Q1 2026 ── -->
+    <div class="cc" id="s1-monthly-wrap" style="margin-bottom:18px">
+      <h3>📅 Nuevos Seguidores — Desglose Mensual Q1 2026 <small>campañas de alcance Meta Ads · coste medio 0,77€/seguidor</small></h3>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px" id="s1-monthly-grid">
+        <div style="background:var(--igS);border:1.5px solid rgba(225,48,108,.2);border-radius:var(--r);padding:16px 20px;text-align:center">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Enero 2026</div>
+          <div style="font-size:28px;font-weight:800;color:var(--ig)" id="s1-m-ene">5.828</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">seguidores · ~€3.556</div>
+        </div>
+        <div style="background:var(--igS);border:1.5px solid rgba(225,48,108,.2);border-radius:var(--r);padding:16px 20px;text-align:center">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Febrero 2026</div>
+          <div style="font-size:28px;font-weight:800;color:var(--ig)" id="s1-m-feb">3.475</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">seguidores · ~€2.676</div>
+        </div>
+        <div style="background:var(--igS);border:1.5px solid rgba(225,48,108,.2);border-radius:var(--r);padding:16px 20px;text-align:center">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Marzo 2026 <span style="font-size:10px">(hasta 20/3)</span></div>
+          <div style="font-size:28px;font-weight:800;color:var(--ig)" id="s1-m-mar">1.698</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">seguidores · ~€1.307</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1.5px solid var(--borderL);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <span style="font-size:12px;color:var(--textM)">📊 <strong>Total Q1:</strong> <span id="s1-m-total" style="color:var(--ig);font-weight:800">11.001 seguidores</span></span>
+        <span style="font-size:12px;color:var(--textM)">💰 <strong>Coste por seguidor:</strong> <span style="color:var(--coral);font-weight:700">0,61€ – 0,89€</span> · media <span style="color:var(--coral);font-weight:800">0,77€</span></span>
+        <span style="font-size:12px;color:var(--textM)">💸 <strong>Inversión total Q1:</strong> <span style="color:var(--warn);font-weight:700">~8.471€</span></span>
+      </div>
+    </div>
+
     <div class="cg g2">
-      <div class="cc"><h3>Nuevos seguidores por día</h3><div class="cw h220"><canvas id="ch-s1-fol"></canvas></div></div>
+      <div class="cc"><h3>Nuevos seguidores por semana <small>Q1 2026 · campañas de alcance</small></h3><div class="cw h220"><canvas id="ch-s1-fol"></canvas></div></div>
       <div class="cc"><h3>Conversaciones → Llamadas → Clientes <small>por semana</small></h3><div class="cw h220"><canvas id="ch-s1-wk"></canvas></div></div>
     </div>
     <div class="cg g2">
@@ -770,7 +797,7 @@ function D(){
   const d30=Array.from({length:30},(_,i)=>{const d=new Date();d.setDate(d.getDate()-29+i);return d.toLocaleDateString('es',{day:'2-digit',month:'short'});});
   const s1Rev=15200, s2Rev=21580, totRev=s1Rev+s2Rev;
   const s1={
-    spend:3200,fol:1840,igFol:1283,
+    spend:8471,fol:11001,igFol:1283,
     igFolByAd:[
       {adSet:'Audiencia Intereses — Fitness',ad:'Reel Transformación 90 días',fol:342},
       {adSet:'Audiencia Intereses — Fitness',ad:'Historia Oferta Especial',fol:198},
@@ -780,9 +807,15 @@ function D(){
       {adSet:'Retargeting Stories 30d',ad:'Reel Urgencia — Quedan plazas',fol:67},
       {adSet:'Retargeting Stories 30d',ad:'Post Resultados Reales',fol:34},
     ],
-    conv:412,calls:156,cli:38,cpf:1.74,cpa:20.5,cac:84.2,rev:s1Rev,
-    roas:+(s1Rev/3200).toFixed(2),close:+(38/156*100).toFixed(1),svr:+(38/1840*100).toFixed(2),s2c:+(412/1840*100).toFixed(1),
-    folD:Array.from({length:30},()=>rd(40,90)),
+    conv:412,calls:156,cli:38,cpf:0.77,cpa:20.5,cac:84.2,rev:s1Rev,
+    roas:+(s1Rev/8471).toFixed(2),close:+(38/156*100).toFixed(1),svr:+(38/11001*100).toFixed(2),s2c:+(412/11001*100).toFixed(1),
+    // Q1 2026 — datos reales semanales (campañas de alcance Meta Ads)
+    folD:[1196,1574,1209,942,907,761,818,804,1092,863,510,325],
+    folW:{
+      labels:['01 Ene','05 Ene','12 Ene','19 Ene','26 Ene','02 Feb','09 Feb','16 Feb','23 Feb','02 Mar','09 Mar','16 Mar'],
+      data:[1196,1574,1209,942,907,761,818,804,1092,863,510,325]
+    },
+    folM:{ene:5828,feb:3475,mar:1698},
     wk:{w,conv:[88,102,112,110],calls:[34,40,42,40],cli:[8,9,11,10]},
     cpaHist:{w,data:[28.4,24.1,21.8,20.5]},
     cvrStages:{labels:['Segu→Conv','Conv→Llamada','Llamada→Cliente'],data:[22.4,37.9,24.4]}
@@ -868,7 +901,7 @@ function rConjunto(d){
   setKpi('cj-cac', c.clients>0&&c.spend>0 ? eur(c.cac) : '—');
 
   // S1 card
-  setKpi('c-s1-spend',eur(s1.spend));setKpi('c-s1-fol',fK(s1.fol));setKpi('c-s1-igfol',s1.igFol>0?fK(s1.igFol):'—');setKpi('c-s1-conv',s1.conv);
+  setKpi('c-s1-spend',eur(s1.spend));setKpi('c-s1-fol',fK(s1.fol)+' seg.');setKpi('c-s1-igfol',s1.igFol>0?fK(s1.igFol):'—');setKpi('c-s1-conv',s1.conv);
   setKpi('c-s1-calls',s1.calls);
   setKpi('c-s1-cpa', s1.calls>0&&s1.spend>0 ? eur(s1.cpa) : '—');
   setKpi('c-s1-cli',s1.cli);
@@ -953,7 +986,23 @@ function rS1(d){
   ],IG);
 
   const d30=Array.from({length:30},(_,i)=>{const d=new Date();d.setDate(d.getDate()-29+i);return d.toLocaleDateString('es',{day:'2-digit',month:'short'});});
-  mk('ch-s1-fol','bar',{labels:d30,datasets:[{label:'Nuevos seguidores',data:s.folD,backgroundColor:IG+'99',borderRadius:4}]});
+  // Gráfico semanal Q1 2026 — datos reales de campañas de alcance
+  const folLabels=s.folW?s.folW.labels:d30;
+  const folData=s.folW?s.folW.data:s.folD;
+  mk('ch-s1-fol','bar',{labels:folLabels,datasets:[{label:'Nuevos seguidores (semana)',data:folData,backgroundColor:IG+'99',borderRadius:4}]});
+  // Actualizar subtítulo KPI con total Q1
+  const folDEl=document.getElementById('s1-fol-d');
+  if(folDEl){folDEl.className='kpi-d du';folDEl.textContent='Total Q1 2026: '+fK(s.fol);}
+  // Actualizar subtítulo CPF con rango
+  const cpfDEl=document.getElementById('s1-cpf-d');
+  if(cpfDEl){cpfDEl.className='kpi-d';cpfDEl.textContent='Rango: 0,61€ – 0,89€';}
+  // Actualizar tarjetas mensuales si existen
+  if(s.folM){
+    const eEl=document.getElementById('s1-m-ene');if(eEl)eEl.textContent=s.folM.ene.toLocaleString('es');
+    const fEl=document.getElementById('s1-m-feb');if(fEl)fEl.textContent=s.folM.feb.toLocaleString('es');
+    const mEl=document.getElementById('s1-m-mar');if(mEl)mEl.textContent=s.folM.mar.toLocaleString('es');
+    const tEl=document.getElementById('s1-m-total');if(tEl)tEl.textContent=(s.folM.ene+s.folM.feb+s.folM.mar).toLocaleString('es')+' seguidores';
+  }
   mk('ch-s1-wk','bar',{labels:s.wk.w,datasets:[
     {label:'Conversaciones',data:s.wk.conv,backgroundColor:IG+'BB',borderRadius:5},
     {label:'Llamadas',data:s.wk.calls,backgroundColor:CO+'BB',borderRadius:5},
