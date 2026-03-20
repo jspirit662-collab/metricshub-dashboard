@@ -511,6 +511,58 @@ def get_ghl_calendars():
     return jsonify({"error": f"API /calendars no disponible. {last_err}"}), 500
 
 
+
+# ─────────────────────────────────────────
+# AIRTABLE — TRAININGPEAKS CLIENTES ACTIVOS
+# Token: desde cabecera X-AT-Token (frontend) o variable de entorno AIRTABLE_TOKEN
+# NUNCA hardcodeado en código fuente
+# ─────────────────────────────────────────
+@app.route("/airtable")
+def get_airtable():
+    token = request.headers.get("X-AT-Token") or os.getenv("AIRTABLE_TOKEN", "")
+    base  = request.args.get("base") or os.getenv("AIRTABLE_BASE_ID", "app8nkARmupm6hbW1")
+    table = request.args.get("table", "Clientes Activos")
+    if not token:
+        return jsonify({"error": "Airtable token no configurado"}), 401
+    if req is None:
+        return jsonify({"error": "requests library no instalada"}), 500
+    AT_BASE = "https://api.airtable.com/v0"
+    headers_at = {"Authorization": f"Bearer {token}"}
+    try:
+        all_records = []
+        offset = None
+        while True:
+            params = {"maxRecords": 100}
+            if offset:
+                params["offset"] = offset
+            r = req.get(f"{AT_BASE}/{base}/{table}", headers=headers_at, params=params, timeout=15)
+            if r.status_code == 401:
+                return jsonify({"error": "Token Airtable inválido"}), 401
+            if r.status_code == 404:
+                return jsonify({"error": f"Tabla '{table}' no encontrada en base {base}"}), 404
+            r.raise_for_status()
+            data = r.json()
+            all_records.extend(data.get("records", []))
+            offset = data.get("offset")
+            if not offset:
+                break
+        groups = {"base": 0, "perf": 0, "elite": 0, "other": 0}
+        clients = []
+        for rec in all_records:
+            f = rec.get("fields", {})
+            nombre = f.get("Nombre") or f.get("Name") or "—"
+            grupo_raw = (f.get("Grupo") or f.get("Plan") or "")
+            gl = grupo_raw.lower()
+            if "elite" in gl: groups["elite"] += 1
+            elif any(x in gl for x in ["performance","perf","pro"]): groups["perf"] += 1
+            elif any(x in gl for x in ["base","basic","starter"]): groups["base"] += 1
+            else: groups["other"] += 1
+            clients.append({"nombre": nombre, "grupo": grupo_raw or "Sin grupo",
+                            "estado": f.get("Estado") or "Activo"})
+        return jsonify({"total": len(all_records), "groups": groups, "clients": clients[:50]})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # ─────────────────────────────────────────
 # HEALTH CHECK
 # ─────────────────────────────────────────
