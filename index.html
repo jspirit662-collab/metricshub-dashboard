@@ -344,6 +344,23 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
       <div class="kpi kc-coral"><div class="kpi-lbl">Ingreso S1</div><div class="kpi-val sm" id="s1-rev">€0</div><div class="kpi-d du">—</div></div>
     </div>
 
+    <!-- ── Desglose Seguimientos de Instagram por Anuncio ── -->
+    <div class="tc" id="igf-wrap" style="margin-bottom:18px">
+      <h3>👣 Seguimientos de Instagram — Desglose por Anuncio</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:35%">Conjunto de anuncio</th>
+            <th>Anuncio</th>
+            <th style="text-align:right;padding-right:20px">Nuevos seguidores</th>
+          </tr>
+        </thead>
+        <tbody id="igf-tbody">
+          <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:16px;font-style:italic">Cargando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
     <div class="cc" style="margin-bottom:18px">
       <h3>Embudo Follow me Ads <small>seguidor → cliente</small></h3>
       <div class="fv" id="fn-s1"></div>
@@ -753,7 +770,17 @@ function D(){
   const d30=Array.from({length:30},(_,i)=>{const d=new Date();d.setDate(d.getDate()-29+i);return d.toLocaleDateString('es',{day:'2-digit',month:'short'});});
   const s1Rev=15200, s2Rev=21580, totRev=s1Rev+s2Rev;
   const s1={
-    spend:3200,fol:1840,igFol:1283,conv:412,calls:156,cli:38,cpf:1.74,cpa:20.5,cac:84.2,rev:s1Rev,
+    spend:3200,fol:1840,igFol:1283,
+    igFolByAd:[
+      {adSet:'Audiencia Intereses — Fitness',ad:'Reel Transformación 90 días',fol:342},
+      {adSet:'Audiencia Intereses — Fitness',ad:'Historia Oferta Especial',fol:198},
+      {adSet:'Lookalike 1% Clientes',ad:'Video Testimonio Pablo R.',fol:287},
+      {adSet:'Lookalike 1% Clientes',ad:'Carrusel Beneficios del Plan',fol:231},
+      {adSet:'Lookalike 1% Clientes',ad:'Reel Rutina Semana Completa',fol:124},
+      {adSet:'Retargeting Stories 30d',ad:'Reel Urgencia — Quedan plazas',fol:67},
+      {adSet:'Retargeting Stories 30d',ad:'Post Resultados Reales',fol:34},
+    ],
+    conv:412,calls:156,cli:38,cpf:1.74,cpa:20.5,cac:84.2,rev:s1Rev,
     roas:+(s1Rev/3200).toFixed(2),close:+(38/156*100).toFixed(1),svr:+(38/1840*100).toFixed(2),s2c:+(412/1840*100).toFixed(1),
     folD:Array.from({length:30},()=>rd(40,90)),
     wk:{w,conv:[88,102,112,110],calls:[34,40,42,40],cli:[8,9,11,10]},
@@ -841,7 +868,7 @@ function rConjunto(d){
   setKpi('cj-cac', c.clients>0&&c.spend>0 ? eur(c.cac) : '—');
 
   // S1 card
-  setKpi('c-s1-spend',eur(s1.spend));setKpi('c-s1-fol',fK(s1.fol));setKpi('c-s1-conv',s1.conv);
+  setKpi('c-s1-spend',eur(s1.spend));setKpi('c-s1-fol',fK(s1.fol));setKpi('c-s1-igfol',s1.igFol>0?fK(s1.igFol):'—');setKpi('c-s1-conv',s1.conv);
   setKpi('c-s1-calls',s1.calls);
   setKpi('c-s1-cpa', s1.calls>0&&s1.spend>0 ? eur(s1.cpa) : '—');
   setKpi('c-s1-cli',s1.cli);
@@ -880,6 +907,38 @@ function rS1(d){
   // KPIs
   setKpi('s1-spend',eur(s.spend));
   setKpi('s1-fol',fK(s.fol));setKpi('s1-igfol',s.igFol>0?fK(s.igFol):'—');setKpi('s1-conv',s.conv);
+
+  // ── Tabla desglose follows por anuncio ──
+  const igfTb=document.getElementById('igf-tbody');
+  if(igfTb){
+    const rows=s.igFolByAd||[];
+    if(!rows.length){
+      igfTb.innerHTML=`<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:16px;font-style:italic">Conecta Meta Ads para ver el desglose real por anuncio</td></tr>`;
+    }else{
+      let lastSet='',html='';
+      const tot=rows.reduce((a,r)=>a+r.fol,0);
+      const uniqueSets=[...new Set(rows.map(r=>r.adSet))];
+      rows.forEach(r=>{
+        const isNew=r.adSet!==lastSet;
+        const pct=tot>0?Math.round(r.fol/tot*100):0;
+        if(isNew){
+          html+=`<tr style="background:var(--surface2)"><td colspan="3" style="font-weight:700;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:7px 16px;border-top:2px solid var(--borderL)">${r.adSet}</td></tr>`;
+        }
+        html+=`<tr>
+          <td style="padding-left:28px;font-size:12px;color:var(--muted)"></td>
+          <td style="padding-left:12px;color:var(--textM)">${r.ad}</td>
+          <td style="text-align:right;padding-right:20px"><span style="font-weight:700;color:var(--ig)">${fK(r.fol)}</span> <span style="font-size:10px;color:var(--muted)">${pct}%</span></td>
+        </tr>`;
+        lastSet=r.adSet;
+      });
+      html+=`<tr style="background:var(--surface2);border-top:2px solid var(--borderL)">
+        <td style="font-weight:700;color:var(--text);padding-left:16px">Total</td>
+        <td style="color:var(--muted);font-size:11px;font-style:italic">${rows.length} anuncio${rows.length!==1?'s':''} · ${uniqueSets.length} conjunto${uniqueSets.length!==1?'s':''}</td>
+        <td style="text-align:right;font-weight:700;color:var(--ig);padding-right:20px">${fK(tot)}</td>
+      </tr>`;
+      igfTb.innerHTML=html;
+    }
+  }
   setKpi('s1-s2c',s.fol>0?s.s2c+'%':'—');
   setKpi('s1-cli',s.cli);
   setKpi('s1-cpf',s.fol>0&&s.spend>0?eur(s.cpf):'—');
@@ -1052,10 +1111,11 @@ async function fetchMetaReal(){
     : `insights.date_preset(last_30d){spend,impressions,clicks,ctr,cpc}`;
   const campParams=new URLSearchParams({fields:`name,effective_status,objective,${insSubField}`,limit:'20'});
   try{
-    const [insR,campsR,dailyR]=await Promise.all([
+    const [insR,campsR,dailyR,adInsR]=await Promise.all([
       fetch(`${base}/insights?fields=spend,impressions,clicks,ctr,cpc,cpm&${timeRangeParam}&${tok}`).then(r=>r.json()),
       fetch(`${base}/campaigns?${campParams}&${tok}`).then(r=>r.json()),
       fetch(`${base}/insights?fields=spend,impressions&time_increment=1&${timeRangeParam}&${tok}`).then(r=>r.json()),
+      fetch(`${base}/insights?level=ad&fields=ad_name,adset_name,actions&${timeRangeParam}&limit=500&${tok}`).then(r=>r.json()).catch(()=>({})),
     ]);
     if(insR.error){console.warn('Meta API insights:',insR.error.message,insR.error.code);return null;}
     if(campsR.error){console.warn('Meta API campaigns:',campsR.error.message,campsR.error.code);}
@@ -1073,9 +1133,19 @@ async function fetchMetaReal(){
         fo:'—',lq:'—',ca:'—',cp:'—',cl:'—',close:'—',roas:'—',rawSpend:parseFloat(ci.spend||0)};
     });
     const daily=(dailyR.data||[]).sort((a,b)=>a.date_start>b.date_start?1:-1);
+    // Desglose follows por anuncio
+    const igFolByAd=[];
+    (adInsR.data||[]).forEach(row=>{
+      const followAct=(row.actions||[]).find(a=>a.action_type==='follow'||a.action_type==='like');
+      const fol=followAct?parseInt(followAct.value||0):0;
+      if(fol>0) igFolByAd.push({adSet:row.adset_name||'—',ad:row.ad_name||'—',fol});
+    });
+    igFolByAd.sort((a,b)=>b.fol-a.fol);
+    const totalIgFol=igFolByAd.reduce((s,r)=>s+r.fol,0);
     return{sp:parseFloat(ins.spend||0),im:parseInt(ins.impressions||0),cl:parseInt(ins.clicks||0),
       ctr:parseFloat(ins.ctr||0).toFixed(2),cpc:parseFloat(ins.cpc||0).toFixed(2),cpm:parseFloat(ins.cpm||0).toFixed(1),
-      camps,dailyL:daily.map(d=>{const dt=new Date(d.date_start);return dt.toLocaleDateString('es',{day:'2-digit',month:'short'});}),
+      camps,igFolByAd,totalIgFol,
+      dailyL:daily.map(d=>{const dt=new Date(d.date_start);return dt.toLocaleDateString('es',{day:'2-digit',month:'short'});}),
       dailySp:daily.map(d=>parseFloat(d.spend||0)),dailyIm:daily.map(d=>parseInt(d.impressions||0))};
   }catch(e){console.warn('fetchMetaReal:',e);return null;}
 }
@@ -1222,6 +1292,11 @@ async function load(){
     // Siempre usar gasto real de Meta aunque sea €0 (nunca caer en demo)
     d.s1.spend=s1Spend;
     d.s2.spend=s2Spend; // siempre real, incluso €0 para hoy
+    // Follows por anuncio desde Meta Ads real
+    if(rm.igFolByAd&&rm.igFolByAd.length){
+      d.s1.igFol=rm.totalIgFol;
+      d.s1.igFolByAd=rm.igFolByAd;
+    }
     if(formCamps.length)d.s2.camps=formCamps;
 
     // ── Actualiza gasto total conjunto con dato REAL de Meta ──
