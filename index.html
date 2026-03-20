@@ -64,6 +64,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
 .chip{display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--textM)}
 .dot{width:7px;height:7px;border-radius:50%}
 .d-live{background:var(--ok);box-shadow:0 0 6px var(--ok)}.d-demo{background:var(--warn)}.d-off{background:var(--err)}
+.tp-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}.tp-lbl{min-width:110px;font-size:12px;font-weight:600;color:var(--text)}.tp-bar-wrap{flex:1;background:var(--border);border-radius:8px;height:10px;overflow:hidden}.tp-bar{height:10px;border-radius:8px;transition:width .5s}.tp-cnt{min-width:36px;text-align:right;font-size:13px;font-weight:700;color:var(--text)}
 .mode{margin-left:auto;font-size:11px;font-weight:700;padding:5px 13px;border-radius:20px;background:var(--warnS);color:var(--warn);border:1.5px solid rgba(217,119,6,.3)}
 .mode.live{background:var(--okS);color:var(--ok);border-color:rgba(22,163,74,.3)}
 
@@ -195,6 +196,7 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
   </div>
   <div class="sb-grp">
     <div class="sb-lbl">Plataformas</div>
+    <button class="ni" onclick="nav('tp',this)"><span class="ni-ico">🏋️</span><span>TrainingPeaks</span></button>
     <button class="ni" onclick="nav('ig',this)"><span class="ni-ico">📸</span><span>Instagram</span></button>
     <button class="ni" onclick="nav('meta',this)"><span class="ni-ico">🔵</span><span>Meta Ads</span></button>
     <button class="ni" onclick="nav('stripe',this)"><span class="ni-ico">💳</span><span>Stripe</span></button>
@@ -274,6 +276,7 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
         </div>
         <div class="sm2"><span class="sm-lbl">💸 Gasto</span><span class="sm-val coral" id="c-s1-spend">—</span></div>
         <div class="sm2"><span class="sm-lbl">📲 Nuevos Seguidores</span><span class="sm-val ig" id="c-s1-fol">—</span></div>
+        <div class="sm2"><span class="sm-lbl">👣 Seguimientos de Instagram</span><span class="sm-val ig" id="c-s1-igfol">—</span></div>
         <div class="sm2"><span class="sm-lbl">💬 Conversaciones abiertas</span><span class="sm-val" id="c-s1-conv">—</span></div>
         <div class="sm2"><span class="sm-lbl">📞 Llamadas agendadas</span><span class="sm-val" id="c-s1-calls">—</span></div>
         <div class="sm2"><span class="sm-lbl">🗓️ Coste de agenda</span><span class="sm-val coral" id="c-s1-cpa">—</span></div>
@@ -332,6 +335,7 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
     <div class="kpi-g">
       <div class="kpi kc-ig"><div class="kpi-lbl">Gasto en Ads</div><div class="kpi-val" id="s1-spend">€0</div><div class="kpi-d dd" id="s1-spend-d">—</div></div>
       <div class="kpi kc-ig"><div class="kpi-lbl">Nuevos Seguidores</div><div class="kpi-val" id="s1-fol">0</div><div class="kpi-d du" id="s1-fol-d">—</div></div>
+      <div class="kpi kc-ig"><div class="kpi-lbl">Seguimientos de Instagram</div><div class="kpi-val" id="s1-igfol">0</div><div class="kpi-d">Follows via Meta Ads</div></div>
       <div class="kpi kc-ig"><div class="kpi-lbl">DMs / Conversaciones</div><div class="kpi-val" id="s1-conv">0</div><div class="kpi-d du" id="s1-conv-d">—</div></div>
       <div class="kpi kc-ig"><div class="kpi-lbl">% Segu → Conv</div><div class="kpi-val sm" id="s1-s2c">0%</div><div class="kpi-d">De seguidores que escriben</div></div>
       <div class="kpi kc-ok"><div class="kpi-lbl">Clientes Cerrados</div><div class="kpi-val" id="s1-cli">0</div><div class="kpi-d du" id="s1-cli-d">—</div></div>
@@ -399,6 +403,40 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
   <!-- ═══════════════════════════
        INSTAGRAM
   ═══════════════════════════ -->
+  <!-- ═══════════════════════════
+       TRAININGPEAKS — CLIENTES ACTIVOS
+  ═══════════════════════════ -->
+  <section id="sec-tp" class="sec">
+    <div class="kpi-g">
+      <div class="kpi kc-ok"><div class="kpi-lbl">Clientes Activos Totales</div><div class="kpi-val" id="tp-total">164</div><div class="kpi-d">TrainingPeaks activos</div></div>
+      <div class="kpi kc-ig"><div class="kpi-lbl">Grupo Base</div><div class="kpi-val" id="tp-base">—</div><div class="kpi-d">Plan Base</div></div>
+      <div class="kpi kc-ig"><div class="kpi-lbl">Grupo Performance</div><div class="kpi-val" id="tp-perf">—</div><div class="kpi-d">Plan Performance</div></div>
+      <div class="kpi kc-ig"><div class="kpi-lbl">Grupo Elite</div><div class="kpi-val" id="tp-elite">—</div><div class="kpi-d">Plan Elite</div></div>
+      <div class="kpi kc-coral"><div class="kpi-lbl">Última actualización</div><div class="kpi-val sm" id="tp-updated">—</div><div class="kpi-d">Airtable sync</div></div>
+    </div>
+    <div class="cg g2" style="margin-top:18px">
+      <div class="cc">
+        <h3>Distribución por Grupo</h3>
+        <div style="padding:18px 0">
+          <div id="tp-groups">
+            <div class="tp-row"><span class="tp-lbl">🟢 Base</span><div class="tp-bar-wrap"><div class="tp-bar" id="tp-bar-base" style="background:var(--ig)"></div></div><span class="tp-cnt" id="tp-cnt-base">—</span></div>
+            <div class="tp-row"><span class="tp-lbl">🔵 Performance</span><div class="tp-bar-wrap"><div class="tp-bar" id="tp-bar-perf" style="background:var(--meta)"></div></div><span class="tp-cnt" id="tp-cnt-perf">—</span></div>
+            <div class="tp-row"><span class="tp-lbl">🏆 Elite</span><div class="tp-bar-wrap"><div class="tp-bar" id="tp-bar-elite" style="background:var(--ok)"></div></div><span class="tp-cnt" id="tp-cnt-elite">—</span></div>
+            <div class="tp-row"><span class="tp-lbl">⚪ Sin grupo</span><div class="tp-bar-wrap"><div class="tp-bar" id="tp-bar-other" style="background:var(--muted)"></div></div><span class="tp-cnt" id="tp-cnt-other">—</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="cc">
+        <h3>Estado de conexión Airtable</h3>
+        <div id="tp-status" style="padding:18px;font-size:13px;color:var(--muted)">
+          <div id="tp-status-msg" style="margin-bottom:12px">⏳ Configura el Airtable Token en ⚙️ Configurar APIs para cargar datos reales.</div>
+          <div id="tp-client-list" style="max-height:220px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
   <section id="sec-ig" class="sec">
     <div class="kpi-g">
       <div class="kpi kc-ig"><div class="kpi-lbl">Seguidores Totales</div><div class="kpi-val" id="ig-tot">0</div><div class="kpi-d du" id="ig-tot-d">—</div></div>
@@ -536,6 +574,11 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
     <button type="button" class="bsc" style="font-size:12px;margin-bottom:10px" onclick="loadCalendars()">🔄 Cargar calendarios desde GHL</button>
     <div id="cal-list" style="font-size:12px;color:var(--muted)">Introduce la API Key y Location ID de GHL, luego pulsa el botón.</div>
     <hr class="dv">
+    <div class="fsec">🏋️ TrainingPeaks — Airtable</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:9px">El token se guarda <strong>solo en sesión</strong> — nunca en el código fuente. Base ID preconfigurado.</p>
+    <div class="fg"><label>Airtable Token</label><input type="password" id="cat-tok" placeholder="patysI..."></div>
+    <div class="fg"><label>Base ID</label><input type="text" id="cat-base" placeholder="app8nkARmupm6hbW1"></div>
+    <hr class="dv">
     <div class="fsec">🔗 Proxy Local</div>
     <div class="fg"><label>URL</label><input type="text" id="cp-url" value="http://localhost:5050"></div>
     <div class="ma">
@@ -550,14 +593,16 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
 const _saved=JSON.parse(localStorage.getItem('dash_cfg')||'{}');
 let CFG={
   igT:_saved.igT||'',igA:_saved.igA||'',
-  mT:_saved.mT||'EAAOj65dkW4oBQ5cu2qCHToZBjYcPKVRU0X31EtPUZASrXNgwujH2GiWKiStdgOZCdiIimjDokt1bBqFhxq0p8KIRlmzRYTiRmnZAPR70BkG0TfwvsOZC6tWOZBt83Pb0mSzGrZABzAjqvkUEfv4rakQ3xfXbWDYpjl1nMOvbZAzc5MM55QtPL5ahnemuS9S1fbigZBzQeZBzYYxPj3CuLSw4ZBSQWjZBjTPDeb3L1w1BUZAWNZBVHsZAL0nNEdlk5UFnTz4jK6JyMkttbwtmZAZBj56Dyb9K4vZAQVtgZDZD',
-  mA:_saved.mA||'act_921819770400770',
+  mT:_saved.mT||'',
+  mA:_saved.mA||'',
   sK:_saved.sK||'',
-  gK:_saved.gK||'pit-11345624-8c04-40db-a563-80f507d8fc59',
-  gL:_saved.gL||'66YCnZxlRGyY9Cu0G2XH',
+  gK:_saved.gK||'',
+  gL:_saved.gL||'',
   pU:_saved.pU||(location.hostname==='localhost'||location.hostname==='127.0.0.1'?'http://localhost:5050':location.origin),live:false,
   s1Cals:_saved.s1Cals||[],
-  s2Cals:_saved.s2Cals||[]
+  s2Cals:_saved.s2Cals||[],
+  atT:_saved.atT||'',
+  atB:_saved.atB||''
 };
 function _saveCFG(){try{localStorage.setItem('dash_cfg',JSON.stringify(CFG));}catch(e){}}
 let CHS={};
@@ -708,7 +753,7 @@ function D(){
   const d30=Array.from({length:30},(_,i)=>{const d=new Date();d.setDate(d.getDate()-29+i);return d.toLocaleDateString('es',{day:'2-digit',month:'short'});});
   const s1Rev=15200, s2Rev=21580, totRev=s1Rev+s2Rev;
   const s1={
-    spend:3200,fol:1840,conv:412,calls:156,cli:38,cpf:1.74,cpa:20.5,cac:84.2,rev:s1Rev,
+    spend:3200,fol:1840,igFol:1283,conv:412,calls:156,cli:38,cpf:1.74,cpa:20.5,cac:84.2,rev:s1Rev,
     roas:+(s1Rev/3200).toFixed(2),close:+(38/156*100).toFixed(1),svr:+(38/1840*100).toFixed(2),s2c:+(412/1840*100).toFixed(1),
     folD:Array.from({length:30},()=>rd(40,90)),
     wk:{w,conv:[88,102,112,110],calls:[34,40,42,40],cli:[8,9,11,10]},
@@ -834,7 +879,7 @@ function rS1(d){
   setKpi('s1-hl-svr',s.fol>0&&s.cli>0?s.svr+'%':'—');
   // KPIs
   setKpi('s1-spend',eur(s.spend));
-  setKpi('s1-fol',fK(s.fol));setKpi('s1-conv',s.conv);
+  setKpi('s1-fol',fK(s.fol));setKpi('s1-igfol',s.igFol>0?fK(s.igFol):'—');setKpi('s1-conv',s.conv);
   setKpi('s1-s2c',s.fol>0?s.s2c+'%':'—');
   setKpi('s1-cli',s.cli);
   setKpi('s1-cpf',s.fol>0&&s.spend>0?eur(s.cpf):'—');
@@ -1076,6 +1121,77 @@ async function fetchStripeReal(){
 }
 
 // ── BOOT ──
+
+// ── TRAININGPEAKS — AIRTABLE ──
+async function fetchAirtable(){
+  const tok=CFG.atT;
+  const base=CFG.atB||'app8nkARmupm6hbW1';
+  if(!tok||!base) return null;
+  try{
+    const proxyUrl=CFG.pU||'http://localhost:5050';
+    const r=await fetch(`${proxyUrl}/airtable?base=${encodeURIComponent(base)}`,{
+      headers:{'X-AT-Token':tok}
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return await r.json();
+  } catch(e){
+    try{
+      const r=await fetch(
+        `https://api.airtable.com/v0/${base}/Clientes%20Activos?maxRecords=500`,
+        {headers:{Authorization:`Bearer ${tok}`}}
+      );
+      if(!r.ok) throw new Error('AT '+r.status);
+      const data=await r.json();
+      return processAirtableRecords(data.records||[]);
+    } catch(e2){ return null; }
+  }
+}
+function processAirtableRecords(records){
+  const groups={base:0,perf:0,elite:0,other:0};
+  const clients=[];
+  records.forEach(rec=>{
+    const f=rec.fields||{};
+    const nombre=f.Nombre||f.Name||f.nombre||'—';
+    const grupo=(f.Grupo||f.grupo||f.Plan||f.plan||'').toLowerCase();
+    if(grupo.includes('elite')) groups.elite++;
+    else if(grupo.includes('performance')||grupo.includes('perf')||grupo.includes('pro')) groups.perf++;
+    else if(grupo.includes('base')||grupo.includes('basic')) groups.base++;
+    else groups.other++;
+    clients.push({nombre,grupo:f.Grupo||f.Plan||'Sin grupo',estado:f.Estado||f.estado||'Activo'});
+  });
+  return {total:records.length,groups,clients};
+}
+function rTP(data){
+  const total=data&&data.total!=null?data.total:164;
+  const groups=data&&data.groups?data.groups:{base:67,perf:58,elite:24,other:15};
+  const clients=data&&data.clients?data.clients:[];
+  const mx=Math.max(groups.base,groups.perf,groups.elite,groups.other,1);
+  setKpi('tp-total',total);
+  setKpi('tp-base',groups.base);
+  setKpi('tp-perf',groups.perf);
+  setKpi('tp-elite',groups.elite);
+  setKpi('tp-updated',new Date().toLocaleTimeString('es'));
+  ['base','perf','elite','other'].forEach(k=>{
+    const bar=document.getElementById('tp-bar-'+k);
+    const cnt=document.getElementById('tp-cnt-'+k);
+    if(bar) bar.style.width=((groups[k]/mx)*100)+'%';
+    if(cnt) cnt.textContent=groups[k];
+  });
+  const list=document.getElementById('tp-client-list');
+  const msg=document.getElementById('tp-status-msg');
+  if(data&&data.total){
+    if(msg) msg.innerHTML='<span style="color:var(--ok)">✅ Conectado a Airtable · '+total+' clientes activos</span>';
+    if(list&&clients.length){
+      list.innerHTML='<table style="width:100%;font-size:11px;border-collapse:collapse">'
+        +'<tr style="color:var(--muted);border-bottom:1px solid var(--border)"><th style="text-align:left;padding:4px 6px">Nombre</th><th>Grupo</th><th>Estado</th></tr>'
+        +clients.slice(0,20).map(c=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:4px 6px;font-weight:600">${c.nombre}</td><td style="padding:4px 6px;color:var(--muted)">${c.grupo}</td><td style="padding:4px 6px;color:var(--ok)">${c.estado}</td></tr>`).join('')
+        +'</table>';
+    }
+  } else {
+    if(msg) msg.innerHTML='📊 Datos demo · <a href="#" onclick="openM();return false" style="color:var(--ig)">Configura Airtable</a> para ver datos reales.';
+  }
+}
+
 async function load(){
   const d=D();
   // Si Meta está configurado, arrancar con €0 en gasto (nunca mostrar datos demo de gasto)
@@ -1206,6 +1322,7 @@ async function load(){
   }
 
   rConjunto(d);rS1(d);rS2(d);rIG(d);rMeta(d);rStripe(rs);
+  if(CFG.atT){fetchAirtable().then(atData=>{rTP(atData);});}else{rTP(null);}
   document.getElementById('lu').textContent=new Date().toLocaleTimeString('es');
 }
 async function refresh(){
@@ -1221,7 +1338,8 @@ const TITLES={
   s2:['Form Ads + Llamada','Meta Ads · Formulario → Lead → Llamada → Cliente'],
   ig:['Instagram','Seguidores, DMs y crecimiento de cuenta'],
   meta:['Meta Ads','Campañas activas, gasto e impresiones'],
-  stripe:['Stripe — Estrategas','Ingresos y pagos en tiempo real (datos reales)']
+  stripe:['Stripe — Estrategas','Ingresos y pagos en tiempo real (datos reales)'],
+  tp:['TrainingPeaks — Clientes Activos','164 clientes activos · Conectado a Airtable']
 };
 function nav(id,btn){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
@@ -1242,6 +1360,8 @@ function openM(){
   f('cs-key',CFG.sK);
   f('cg-key',CFG.gK);f('cg-loc',CFG.gL);
   f('cp-url',CFG.pU);
+  f('cat-tok',CFG.atT);
+  const catBase=document.getElementById('cat-base');if(catBase)catBase.value=CFG.atB||'app8nkARmupm6hbW1';
   document.getElementById('ov').classList.add('on');
 }
 function closeM(){document.getElementById('ov').classList.remove('on')}
@@ -1255,6 +1375,8 @@ function saveC(){
   CFG.gK=document.getElementById('cg-key').value;
   CFG.gL=document.getElementById('cg-loc').value;
   CFG.pU=document.getElementById('cp-url').value;
+  const _atT=document.getElementById('cat-tok');if(_atT)CFG.atT=_atT.value;
+  const _atB=document.getElementById('cat-base');if(_atB)CFG.atB=_atB.value||'app8nkARmupm6hbW1';
   // Leer asignaciones de calendarios
   const s1Cals=[],s2Cals=[];
   document.querySelectorAll('[name^="cal_"]').forEach(inp=>{
