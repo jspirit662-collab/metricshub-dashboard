@@ -1677,7 +1677,7 @@ function saveC(){
 
 // ── QUICK DATE ──
 function setDQ(range){
-  const fmt=d=>d.toISOString().split('T')[0];
+  const fmt=d=>{const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dy=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${dy}`;};
   const now=new Date();
   let from=new Date();
   if(range==='today'){from=new Date();}
@@ -1698,7 +1698,7 @@ function setDQ(range){
 
 // ── DATE INPUTS INIT ──
 (()=>{
-  const fmt=d=>d.toISOString().split('T')[0];
+  const fmt=d=>{const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dy=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${dy}`;};
   const now=new Date(),from=new Date();from.setDate(now.getDate()-30);
   const fromEl=document.getElementById('dp-from');
   const toEl=document.getElementById('dp-to');
