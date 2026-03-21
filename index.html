@@ -239,6 +239,11 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
     <div style="margin-left:auto;font-size:11px;color:var(--muted)">Actualizado: <span id="lu">—</span></div>
   </div>
 
+  <!-- TOKEN EXPIRY BANNER -->
+  <div id="meta-token-banner" style="display:none;background:var(--warnS);border:1.5px solid rgba(217,119,6,.4);border-radius:var(--rs);padding:10px 16px;margin-bottom:16px;font-size:13px;color:var(--warn);font-weight:600;display:none;align-items:center;gap:10px">
+    ⚠️ Token de Meta Ads expirado — los datos de seguidores no se pueden actualizar. <a href="#" onclick="openM();return false" style="color:var(--coral);text-decoration:underline;font-weight:700">Reconectar en Configuración</a>
+  </div>
+
   <!-- QUICK DATE BAR -->
   <div class="dq-bar">
     <button class="dq" id="dq-today" onclick="setDQ('today')">Hoy</button>
@@ -366,10 +371,10 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
       <div class="fv" id="fn-s1"></div>
     </div>
 
-    <!-- ── Desglose mensual Q1 2026 ── -->
+    <!-- ── Desglose mensual dinámico ── -->
     <div class="cc" id="s1-monthly-wrap" style="margin-bottom:18px">
-      <h3>📅 Nuevos Seguidores — Desglose Mensual Q1 2026 <small>campañas de alcance Meta Ads · coste medio 0,77€/seguidor</small></h3>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px" id="s1-monthly-grid">
+      <h3 id="s1-monthly-title">📅 Nuevos Seguidores — Desglose Mensual <small id="s1-monthly-sub">campañas de alcance Meta Ads</small></h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-top:14px" id="s1-monthly-grid">
         <div style="background:var(--igS);border:1.5px solid rgba(225,48,108,.2);border-radius:var(--r);padding:16px 20px;text-align:center">
           <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Enero 2026</div>
           <div style="font-size:28px;font-weight:800;color:var(--ig)" id="s1-m-ene">5.828</div>
@@ -386,15 +391,15 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
           <div style="font-size:11px;color:var(--muted);margin-top:4px">seguidores · ~€1.307</div>
         </div>
       </div>
-      <div style="margin-top:12px;padding-top:10px;border-top:1.5px solid var(--borderL);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <span style="font-size:12px;color:var(--textM)">📊 <strong>Total Q1:</strong> <span id="s1-m-total" style="color:var(--ig);font-weight:800">11.001 seguidores</span></span>
-        <span style="font-size:12px;color:var(--textM)">💰 <strong>Coste por seguidor:</strong> <span style="color:var(--coral);font-weight:700">0,61€ – 0,89€</span> · media <span style="color:var(--coral);font-weight:800">0,77€</span></span>
-        <span style="font-size:12px;color:var(--textM)">💸 <strong>Inversión total Q1:</strong> <span style="color:var(--warn);font-weight:700">~8.471€</span></span>
+      <div id="s1-monthly-footer" style="margin-top:12px;padding-top:10px;border-top:1.5px solid var(--borderL);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <span style="font-size:12px;color:var(--textM)">📊 <strong>Total período:</strong> <span id="s1-m-total" style="color:var(--ig);font-weight:800">—</span></span>
+        <span style="font-size:12px;color:var(--textM)">💰 <strong>Coste por seguidor:</strong> <span id="s1-m-cpf" style="color:var(--coral);font-weight:700">—</span></span>
+        <span style="font-size:12px;color:var(--textM)">💸 <strong>Inversión total:</strong> <span id="s1-m-spend" style="color:var(--warn);font-weight:700">—</span></span>
       </div>
     </div>
 
     <div class="cg g2">
-      <div class="cc"><h3>Nuevos seguidores por semana <small>Q1 2026 · campañas de alcance</small></h3><div class="cw h220"><canvas id="ch-s1-fol"></canvas></div></div>
+      <div class="cc"><h3 id="s1-fol-chart-title">Nuevos seguidores por semana <small id="s1-fol-chart-sub">cargando…</small></h3><div class="cw h220"><canvas id="ch-s1-fol"></canvas></div></div>
       <div class="cc"><h3>Conversaciones → Llamadas → Clientes <small>por semana</small></h3><div class="cw h220"><canvas id="ch-s1-wk"></canvas></div></div>
     </div>
     <div class="cg g2">
@@ -986,22 +991,96 @@ function rS1(d){
   ],IG);
 
   const d30=Array.from({length:30},(_,i)=>{const d=new Date();d.setDate(d.getDate()-29+i);return d.toLocaleDateString('es',{day:'2-digit',month:'short'});});
-  // Gráfico semanal Q1 2026 — datos reales de campañas de alcance
+
+  // ── Gráfico seguidores: usar datos reales del período si disponibles ──
   const folLabels=s.folW?s.folW.labels:d30;
   const folData=s.folW?s.folW.data:s.folD;
-  mk('ch-s1-fol','bar',{labels:folLabels,datasets:[{label:'Nuevos seguidores (semana)',data:folData,backgroundColor:IG+'99',borderRadius:4}]});
-  // Actualizar subtítulo KPI con total Q1
+  // Determinar si hay datos reales de seguidores por día
+  const hasRealFolData=s.folW&&s.folW.data&&s.folW.data.some(v=>v>0);
+
+  // Actualizar título del gráfico según período seleccionado
+  const fromEl2=document.getElementById('dp-from');const toEl2=document.getElementById('dp-to');
+  const sinceLabel=fromEl2&&fromEl2.value?fromEl2.value:null;
+  const untilLabel=toEl2&&toEl2.value?toEl2.value:null;
+  const periodLabel=sinceLabel&&untilLabel?sinceLabel+' → '+untilLabel:'últimos 30 días';
+  const chartSubEl=document.getElementById('s1-fol-chart-sub');
+  if(chartSubEl){chartSubEl.textContent=hasRealFolData?periodLabel+' · campañas de alcance':'campañas de alcance · '+periodLabel;}
+
+  mk('ch-s1-fol','bar',{labels:folLabels,datasets:[{label:'Nuevos seguidores',data:folData,backgroundColor:IG+'99',borderRadius:4}]});
+
+  // ── KPI subtítulos con datos reales ──
   const folDEl=document.getElementById('s1-fol-d');
-  if(folDEl){folDEl.className='kpi-d du';folDEl.textContent='Total Q1 2026: '+fK(s.fol);}
-  // Actualizar subtítulo CPF con rango
+  if(folDEl){folDEl.className='kpi-d du';folDEl.textContent='Total período: '+fK(s.fol);}
   const cpfDEl=document.getElementById('s1-cpf-d');
-  if(cpfDEl){cpfDEl.className='kpi-d';cpfDEl.textContent='Rango: 0,61€ – 0,89€';}
-  // Actualizar tarjetas mensuales si existen
-  if(s.folM){
-    const eEl=document.getElementById('s1-m-ene');if(eEl)eEl.textContent=s.folM.ene.toLocaleString('es');
-    const fEl=document.getElementById('s1-m-feb');if(fEl)fEl.textContent=s.folM.feb.toLocaleString('es');
-    const mEl=document.getElementById('s1-m-mar');if(mEl)mEl.textContent=s.folM.mar.toLocaleString('es');
-    const tEl=document.getElementById('s1-m-total');if(tEl)tEl.textContent=(s.folM.ene+s.folM.feb+s.folM.mar).toLocaleString('es')+' seguidores';
+  if(cpfDEl){
+    if(s.cpf&&s.cpf!==0.77){cpfDEl.className='kpi-d';cpfDEl.textContent='€'+s.cpf.toFixed(2)+'/seguidor (período)';}
+    else{cpfDEl.className='kpi-d';cpfDEl.textContent=s.fol>0&&s.spend>0?'€'+(s.spend/s.fol).toFixed(2)+'/seguidor':'—';}
+  }
+
+  // ── Desglose mensual dinámico ──
+  const monthlyGrid=document.getElementById('s1-monthly-grid');
+  const monthlyTitle=document.getElementById('s1-monthly-title');
+  const monthlyFooter=document.getElementById('s1-monthly-footer');
+  const monthNames={1:'Enero',2:'Febrero',3:'Marzo',4:'Abril',5:'Mayo',6:'Junio',7:'Julio',8:'Agosto',9:'Septiembre',10:'Octubre',11:'Noviembre',12:'Diciembre'};
+
+  if(s.monthlyFolMap&&Object.keys(s.monthlyFolMap).length){
+    // Datos reales de Meta Ads
+    const months=Object.keys(s.monthlyFolMap).sort();
+    const totalFolM=months.reduce((a,m)=>a+(s.monthlyFolMap[m]||0),0);
+    const totalCols=months.length;
+    if(monthlyTitle){
+      const sub=document.getElementById('s1-monthly-sub');
+      if(sub)sub.textContent='campañas de alcance Meta Ads · datos reales '+periodLabel;
+    }
+    if(monthlyGrid){
+      monthlyGrid.innerHTML=months.map(m=>{
+        const [y,mo]=m.split('-');
+        const name=monthNames[parseInt(mo)]||m;
+        const fol=s.monthlyFolMap[m]||0;
+        const cost=s.cpf>0?Math.round(fol*s.cpf):null;
+        return `<div style="background:var(--igS);border:1.5px solid rgba(225,48,108,.2);border-radius:var(--r);padding:16px 20px;text-align:center">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">${name} ${y}</div>
+          <div style="font-size:28px;font-weight:800;color:var(--ig)">${fol.toLocaleString('es')}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">seguidores${cost?` · ~€${cost.toLocaleString('es')}`:''}</div>
+        </div>`;
+      }).join('');
+    }
+    const tEl=document.getElementById('s1-m-total');
+    if(tEl)tEl.textContent=totalFolM.toLocaleString('es')+' seguidores';
+    const cpfEl=document.getElementById('s1-m-cpf');
+    if(cpfEl&&s.cpf>0)cpfEl.textContent='€'+s.cpf.toFixed(2)+'/seguidor';
+    const spEl=document.getElementById('s1-m-spend');
+    if(spEl&&s.spend>0)spEl.textContent='~'+eur(s.spend);
+  } else if(s.folM){
+    // Datos legados (demo) — restaurar siempre las tarjetas de Q1
+    const sub=document.getElementById('s1-monthly-sub');
+    if(sub)sub.textContent='Q1 2026 · campañas de alcance Meta Ads · coste medio 0,77€/seguidor';
+    if(monthlyGrid){
+      monthlyGrid.innerHTML=`
+        <div style="background:var(--igS);border:1.5px solid rgba(225,48,108,.2);border-radius:var(--r);padding:16px 20px;text-align:center">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Enero 2026</div>
+          <div style="font-size:28px;font-weight:800;color:var(--ig)">${(s.folM.ene||5828).toLocaleString('es')}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">seguidores · ~€3.556</div>
+        </div>
+        <div style="background:var(--igS);border:1.5px solid rgba(225,48,108,.2);border-radius:var(--r);padding:16px 20px;text-align:center">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Febrero 2026</div>
+          <div style="font-size:28px;font-weight:800;color:var(--ig)">${(s.folM.feb||3475).toLocaleString('es')}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">seguidores · ~€2.676</div>
+        </div>
+        <div style="background:var(--igS);border:1.5px solid rgba(225,48,108,.2);border-radius:var(--r);padding:16px 20px;text-align:center">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Marzo 2026</div>
+          <div style="font-size:28px;font-weight:800;color:var(--ig)">${(s.folM.mar||1698).toLocaleString('es')}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">seguidores · ~€1.307</div>
+        </div>`;
+    }
+    const tEl=document.getElementById('s1-m-total');
+    if(tEl)tEl.textContent=(s.folM.ene+s.folM.feb+s.folM.mar).toLocaleString('es')+' seguidores';
+    const cpfEl=document.getElementById('s1-m-cpf');if(cpfEl)cpfEl.textContent='0,61€ – 0,89€ · media 0,77€';
+    const spEl=document.getElementById('s1-m-spend');if(spEl)spEl.textContent='~€8.471';
+  } else {
+    // Sin datos: mensaje informativo
+    if(monthlyGrid)monthlyGrid.innerHTML=`<div style="color:var(--muted);font-size:12px;padding:14px;grid-column:1/-1;text-align:center;font-style:italic">Conecta Meta Ads para ver el desglose real de seguidores por mes según el período seleccionado</div>`;
+    const tEl=document.getElementById('s1-m-total');if(tEl)tEl.textContent='—';
   }
   mk('ch-s1-wk','bar',{labels:s.wk.w,datasets:[
     {label:'Conversaciones',data:s.wk.conv,backgroundColor:IG+'BB',borderRadius:5},
@@ -1152,25 +1231,41 @@ async function fetchMetaReal(){
   const since=fromEl&&fromEl.value?fromEl.value:null;
   const until=toEl&&toEl.value?toEl.value:null;
   // Construye parámetros de fecha para distintos endpoints
-  // Para account-level insights: time_range como param URL
   const timeRangeParam = since&&until ? `time_range=${encodeURIComponent(JSON.stringify({since,until}))}` : `date_preset=last_30d`;
-  // Para campaigns con insights sub-field: time_range DEBE ir embebido en el campo (no como param top-level)
   const insSubField = since&&until
     ? `insights.time_range(${JSON.stringify({since,until})}){spend,impressions,clicks,ctr,cpc}`
     : `insights.date_preset(last_30d){spend,impressions,clicks,ctr,cpc}`;
   const campParams=new URLSearchParams({fields:`name,effective_status,objective,${insSubField}`,limit:'20'});
   try{
     const [insR,campsR,dailyR,adInsR]=await Promise.all([
-      fetch(`${base}/insights?fields=spend,impressions,clicks,ctr,cpc,cpm&${timeRangeParam}&${tok}`).then(r=>r.json()),
+      // Incluir actions para obtener instagram_profile_follow_v2 a nivel de cuenta
+      fetch(`${base}/insights?fields=spend,impressions,clicks,ctr,cpc,cpm,actions&${timeRangeParam}&${tok}`).then(r=>r.json()),
       fetch(`${base}/campaigns?${campParams}&${tok}`).then(r=>r.json()),
-      fetch(`${base}/insights?fields=spend,impressions&time_increment=1&${timeRangeParam}&${tok}`).then(r=>r.json()),
+      // Incluir actions en desglose diario para seguidores por día
+      fetch(`${base}/insights?fields=spend,impressions,actions&time_increment=1&${timeRangeParam}&${tok}`).then(r=>r.json()),
+      // Desglose por anuncio
       fetch(`${base}/insights?level=ad&fields=ad_name,adset_name,actions&${timeRangeParam}&limit=500&${tok}`).then(r=>r.json()).catch(()=>({})),
     ]);
-    if(insR.error){console.warn('Meta API insights:',insR.error.message,insR.error.code);return null;}
+    // Detectar token expirado (código 190 = OAuthException)
+    if(insR.error){
+      if(insR.error.code===190||insR.error.type==='OAuthException'||insR.error.code===102){
+        console.warn('Meta token expirado:',insR.error.message);
+        return{_tokenExpired:true,_errMsg:insR.error.message||'Token expirado'};
+      }
+      console.warn('Meta API insights:',insR.error.message,insR.error.code);
+      return null;
+    }
     if(campsR.error){console.warn('Meta API campaigns:',campsR.error.message,campsR.error.code);}
-    // Marcar como real incluso si el período tiene €0 de gasto
-    const _metaLive=true;
     const ins=insR.data&&insR.data[0]||{};
+
+    // Seguidores a nivel de cuenta (instagram_profile_follow_v2)
+    const insActions=ins.actions||[];
+    const accFollowAct=insActions.find(a=>
+      a.action_type==='instagram_profile_follow_v2'||
+      a.action_type==='follow'
+    );
+    const accountFollowers=accFollowAct?parseInt(accFollowAct.value||0):0;
+
     const camps=(campsR.data||[]).map(c=>{
       const ci=c.insights&&c.insights.data&&c.insights.data[0]||{};
       const nm=(c.name||'').toLowerCase();
@@ -1182,18 +1277,43 @@ async function fetchMetaReal(){
         fo:'—',lq:'—',ca:'—',cp:'—',cl:'—',close:'—',roas:'—',rawSpend:parseFloat(ci.spend||0)};
     });
     const daily=(dailyR.data||[]).sort((a,b)=>a.date_start>b.date_start?1:-1);
-    // Desglose follows por anuncio
+
+    // Seguidores por día (instagram_profile_follow_v2)
+    const dailyFol=daily.map(d=>{
+      const acts=d.actions||[];
+      const fa=acts.find(a=>a.action_type==='instagram_profile_follow_v2'||a.action_type==='follow');
+      return fa?parseInt(fa.value||0):0;
+    });
+
+    // Desglose mensual desde datos diarios (clave: YYYY-MM)
+    const monthlyFolMap={};
+    daily.forEach((d,i)=>{
+      const m=d.date_start?d.date_start.substring(0,7):'';
+      if(m){if(!monthlyFolMap[m])monthlyFolMap[m]=0; monthlyFolMap[m]+=(dailyFol[i]||0);}
+    });
+
+    // Desglose follows por anuncio: instagram_profile_follow_v2 o follow o like
     const igFolByAd=[];
     (adInsR.data||[]).forEach(row=>{
-      const followAct=(row.actions||[]).find(a=>a.action_type==='follow'||a.action_type==='like');
+      const followAct=(row.actions||[]).find(a=>
+        a.action_type==='instagram_profile_follow_v2'||
+        a.action_type==='follow'||
+        a.action_type==='like'
+      );
       const fol=followAct?parseInt(followAct.value||0):0;
       if(fol>0) igFolByAd.push({adSet:row.adset_name||'—',ad:row.ad_name||'—',fol});
     });
     igFolByAd.sort((a,b)=>b.fol-a.fol);
     const totalIgFol=igFolByAd.reduce((s,r)=>s+r.fol,0);
+
+    // Total seguidores: priorizar dato cuenta > suma anuncios > suma diaria
+    const dailyFolTotal=dailyFol.reduce((a,v)=>a+v,0);
+    const totalFollowers=accountFollowers>0?accountFollowers:(totalIgFol>0?totalIgFol:dailyFolTotal);
+
     return{sp:parseFloat(ins.spend||0),im:parseInt(ins.impressions||0),cl:parseInt(ins.clicks||0),
       ctr:parseFloat(ins.ctr||0).toFixed(2),cpc:parseFloat(ins.cpc||0).toFixed(2),cpm:parseFloat(ins.cpm||0).toFixed(1),
-      camps,igFolByAd,totalIgFol,
+      camps,igFolByAd,totalIgFol,accountFollowers,totalFollowers,
+      dailyFol,monthlyFolMap,
       dailyL:daily.map(d=>{const dt=new Date(d.date_start);return dt.toLocaleDateString('es',{day:'2-digit',month:'short'});}),
       dailySp:daily.map(d=>parseFloat(d.spend||0)),dailyIm:daily.map(d=>parseInt(d.impressions||0))};
   }catch(e){console.warn('fetchMetaReal:',e);return null;}
@@ -1325,7 +1445,18 @@ async function load(){
   }
   const [rm,rg,rs]=await Promise.all([fetchMetaReal(),fetchGHLReal(),fetchStripeReal()]);
 
-  if(rm){
+  // Manejar token expirado
+  const tokenBanner=document.getElementById('meta-token-banner');
+  if(rm&&rm._tokenExpired){
+    if(tokenBanner){tokenBanner.style.display='flex';}
+    setDot('d-meta','off');
+  } else {
+    if(tokenBanner){tokenBanner.style.display='none';}
+  }
+
+  if(rm&&!rm._tokenExpired){
+    // Limpiar datos demo de seguidores mensuales para no mezclar con datos reales
+    d.s1.folM=null;
     // ── Meta section ──
     d.meta.sp=rm.sp;d.meta.im=rm.im;d.meta.cl=rm.cl;
     d.meta.ctr=rm.ctr;d.meta.cpc=rm.cpc;d.meta.cpm=rm.cpm;
@@ -1338,19 +1469,48 @@ async function load(){
     const formCamps=rm.camps.filter(c=>c.tipo==='Formulario');
     const s1Spend=segCamps.reduce((a,c)=>a+(c.rawSpend||0),0);
     const s2Spend=formCamps.reduce((a,c)=>a+(c.rawSpend||0),0);
-    // Siempre usar gasto real de Meta aunque sea €0 (nunca caer en demo)
     d.s1.spend=s1Spend;
-    d.s2.spend=s2Spend; // siempre real, incluso €0 para hoy
-    // Follows por anuncio desde Meta Ads real
-    if(rm.igFolByAd&&rm.igFolByAd.length){
+    d.s2.spend=s2Spend;
+
+    // ── Seguidores reales del período (instagram_profile_follow_v2) ──
+    if(rm.totalFollowers>0){
+      d.s1.fol=rm.totalFollowers;
+      d.s1.igFol=rm.totalIgFol>0?rm.totalIgFol:rm.accountFollowers;
+    } else if(rm.igFolByAd&&rm.igFolByAd.length){
       d.s1.igFol=rm.totalIgFol;
-      d.s1.igFolByAd=rm.igFolByAd;
+      d.s1.fol=rm.totalIgFol; // fallback: suma de anuncios
     }
+    if(rm.igFolByAd&&rm.igFolByAd.length) d.s1.igFolByAd=rm.igFolByAd;
+
+    // ── Gráfico de seguidores por día/semana ──
+    if(rm.dailyL&&rm.dailyL.length){
+      const hasDailyFol=rm.dailyFol&&rm.dailyFol.some(v=>v>0);
+      if(hasDailyFol){
+        d.s1.folW={labels:rm.dailyL,data:rm.dailyFol};
+        d.s1.folD=rm.dailyFol;
+      } else {
+        // No hay seguidores por día pero sí hay rango → limpiar datos hardcoded
+        d.s1.folW={labels:rm.dailyL,data:rm.dailyL.map(()=>0)};
+      }
+    }
+
+    // ── Desglose mensual real ──
+    if(rm.monthlyFolMap&&Object.keys(rm.monthlyFolMap).length){
+      d.s1.monthlyFolMap=rm.monthlyFolMap;
+    }
+
+    // ── CPF recalculado con datos reales ──
+    if(d.s1.fol>0&&d.s1.spend>0) d.s1.cpf=+(d.s1.spend/d.s1.fol).toFixed(2);
+
+    // ── S2C recalculado ──
+    if(d.s1.fol>0&&d.s1.conv>0) d.s1.s2c=+(d.s1.conv/d.s1.fol*100).toFixed(1);
+
     if(formCamps.length)d.s2.camps=formCamps;
 
     // ── Actualiza gasto total conjunto con dato REAL de Meta ──
     d.cj.spend=rm.sp;
     if(rm.sp>0&&d.cj.rev>0)d.cj.roas=+(d.cj.rev/rm.sp).toFixed(2);
+    d._live=true;
     setDot('d-meta','live');
     const mb2=document.getElementById('modeBdg');
     if(mb2){mb2.textContent='● EN VIVO';mb2.className='mode live';}
