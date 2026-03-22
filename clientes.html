@@ -352,7 +352,8 @@ select:focus{border-color:var(--coral)}
     <div class="cc" style="margin-bottom:18px">
       <h3>Curva de Retención — Cohorte histórica <small>n=364</small></h3>
       <div class="cw h280"><canvas id="ch-curva-retencion"></canvas></div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px;">
+      <p style="font-size:0.75rem; color:#6b7280; margin-top:0.5rem;">* Datos Alejandro solo hasta 6 meses (cartera &lt; 10 meses de antigüedad)</p>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px;">
         <div style="background:rgba(220,38,38,0.08);border:1.5px solid rgba(220,38,38,0.28);border-radius:8px;padding:13px 14px;text-align:center;">
           <div style="font-size:22px;font-weight:700;color:#DC2626;line-height:1.1">72%</div>
           <div style="font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.4">de las bajas ocurren en los primeros 6 meses</div>
@@ -364,6 +365,10 @@ select:focus{border-color:var(--coral)}
         <div style="background:rgba(22,163,74,0.08);border:1.5px solid rgba(22,163,74,0.28);border-radius:8px;padding:13px 14px;text-align:center;">
           <div style="font-size:16px;font-weight:700;color:#16A34A;line-height:1.1">💪 Alta fidelización</div>
           <div style="font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.4">Quien supera el año tiene alta probabilidad de quedarse</div>
+        </div>
+        <div style="background:rgba(249,115,22,0.08);border:1.5px solid rgba(249,115,22,0.28);border-radius:8px;padding:13px 14px;text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:#f97316;line-height:1.1">Alejandro</div>
+          <div style="font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.4">3m: 73.4% vs Global: 80.2%</div>
         </div>
       </div>
     </div>
@@ -956,7 +961,7 @@ function renderRetencion(){
     data: {
       labels: cohortData.map(d => d.label),
       datasets: [{
-        label: '% Retención',
+        label: 'Global',
         data: cohortData.map(d => d.pct),
         borderColor: '#3B82F6',
         borderWidth: 2.5,
@@ -968,13 +973,27 @@ function renderRetencion(){
         tension: 0.35,
         fill: true,
         backgroundColor: 'rgba(59,130,246,0.08)'
+      }, {
+        label: 'Alejandro',
+        data: [100, 73.4, 43.1, null, null, null, null, null, null],
+        borderColor: '#f97316',
+        borderWidth: 2.5,
+        borderDash: [5, 5],
+        pointBackgroundColor: '#f97316',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 8,
+        tension: 0.35,
+        fill: false,
+        spanGaps: false
       }]
     },
     options: {
       ...baseOpts,
       plugins: {
         ...baseOpts.plugins,
-        legend: { display: false },
+        legend: { display: true },
         tooltip: {
           backgroundColor: '#1C1410',
           padding: 10,
