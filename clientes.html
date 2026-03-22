@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Estrategas — Control de Negocio</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#FFF5F2; --surface:#FFFFFF; --surface2:#FFF0EC; --border:#FFD8CE; --borderL:#FFE8E2;
+  --text:#1C1410; --textM:#4A3B35; --muted:#9C8A84;
+  --coral:#FF6248; --coralH:#E8503A; --coralS:rgba(255,98,72,.1); --coralM:rgba(255,98,72,.22);
+  --ok:#16A34A; --okS:rgba(22,163,74,.1);
+  --warn:#D97706; --warnS:rgba(217,119,6,.1);
+  --err:#DC2626; --errS:rgba(220,38,38,.1);
+  --blue:#1877F2; --blueS:rgba(24,119,242,.1);
+  --purple:#7C3AED; --purpleS:rgba(124,58,237,.1);
+  --sh:0 1px 4px rgba(28,20,16,.08); --shM:0 4px 16px rgba(28,20,16,.1);
+  --r:12px; --rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',system-ui,sans-serif;min-height:100vh;font-size:14px;line-height:1.5}
+
+/* SIDEBAR */
+#sb{position:fixed;top:0;left:0;width:226px;height:100vh;background:var(--surface);border-right:1.5px solid var(--border);display:flex;flex-direction:column;z-index:100}
+.sb-logo{padding:18px 18px 14px;border-bottom:1.5px solid var(--borderL);display:flex;align-items:center;gap:10px}
+.sb-ico{width:36px;height:36px;background:var(--coral);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800;flex-shrink:0}
+.sb-name{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.sb-sub{font-size:10.5px;color:var(--muted);margin-top:1px}
+.sb-grp{padding:12px 10px 4px}
+.sb-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:0 8px;margin-bottom:3px}
+.ni{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border-radius:var(--rs);background:none;border:none;cursor:pointer;color:var(--muted);font-size:13.5px;text-align:left;transition:all .15s;margin-bottom:1px}
+.ni:hover{background:var(--surface2);color:var(--textM)}
+.ni.on{background:var(--coralS);color:var(--coral);font-weight:600}
+.ni-ico{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.sb-foot{margin-top:auto;padding:12px 10px;border-top:1.5px solid var(--borderL)}
+#cfgBtn{width:100%;padding:9px 10px;border-radius:var(--rs);border:1.5px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px;transition:all .15s}
+#cfgBtn:hover{background:var(--surface2);color:var(--textM);border-color:var(--coral)}
+
+/* MAIN */
+#main{margin-left:226px;padding:26px 30px;min-height:100vh}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.topbar h1{font-size:20px;font-weight:700}
+.topbar p{font-size:12px;color:var(--muted);margin-top:2px}
+.topbar-r{display:flex;align-items:center;gap:10px}
+.date-pill{background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12.5px;color:var(--textM)}
+.ref-btn{background:var(--coral);border:none;color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;box-shadow:0 2px 8px rgba(255,98,72,.35);transition:background .15s}
+.ref-btn:hover{background:var(--coralH)}
+.ref-btn.spin svg{animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* STATUS ROW */
+.status-row{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--textM)}
+.dot{width:7px;height:7px;border-radius:50%}
+.d-live{background:var(--ok);box-shadow:0 0 6px var(--ok)}.d-demo{background:var(--warn)}.d-off{background:var(--err)}
+.mode{margin-left:auto;font-size:11px;font-weight:700;padding:5px 13px;border-radius:20px;background:var(--warnS);color:var(--warn);border:1.5px solid rgba(217,119,6,.3)}
+.mode.live{background:var(--okS);color:var(--ok);border-color:rgba(22,163,74,.3)}
+
+/* SECTIONS */
+.sec{display:none}.sec.on{display:block}
+
+/* KPI GRID */
+.kpi-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:13px;margin-bottom:20px}
+.kpi{background:var(--surface);border:1.5px solid var(--borderL);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0}
+.kc-coral::after{background:var(--coral)}.kc-ok::after{background:var(--ok)}.kc-warn::after{background:var(--warn)}.kc-blue::after{background:var(--blue)}.kc-purple::after{background:var(--purple)}.kc-err::after{background:var(--err)}
+.kpi-lbl{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px}
+.kpi-val{font-size:26px;font-weight:700;color:var(--text);line-height:1.1}
+.kpi-val.sm{font-size:19px}
+.kpi-d{margin-top:5px;font-size:11.5px;color:var(--muted)}
+.du{color:var(--ok)}.dd{color:var(--err)}
+.kpi-ico{position:absolute;top:14px;right:14px;font-size:20px;opacity:.12}
+
+/* CHART CARDS */
+.cg{display:grid;gap:15px;margin-bottom:18px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:2fr 1fr}.g3r{grid-template-columns:1fr 2fr}
+.cc{background:var(--surface);border:1.5px solid var(--borderL);border-radius:var(--r);padding:18px 20px;box-shadow:var(--sh)}
+.cc h3{font-size:13px;font-weight:700;color:var(--text);margin-bottom:13px}
+.cc h3 small{color:var(--muted);font-weight:400;font-size:11px;margin-left:5px}
+.cw{position:relative}.h220{height:220px}.h250{height:250px}.h200{height:200px}.h180{height:180px}.h280{height:280px}
+
+/* GROUP BARS */
+.grp-list{display:flex;flex-direction:column;gap:10px}
+.grp-row{display:flex;align-items:center;gap:10px}
+.grp-lbl{min-width:130px;font-size:12px;font-weight:600;color:var(--text)}
+.grp-bar-wrap{flex:1;background:var(--borderL);border-radius:8px;height:12px;overflow:hidden}
+.grp-bar{height:12px;border-radius:8px;transition:width .6s ease;background:var(--coral)}
+.grp-cnt{min-width:50px;text-align:right;font-size:12px;font-weight:700;color:var(--text)}
+.grp-pct{min-width:38px;text-align:right;font-size:11px;color:var(--muted)}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;margin-top:8px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;padding:8px 10px;font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--borderL)}
+td{padding:9px 10px;border-bottom:1px solid var(--borderL);color:var(--textM)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.b-ok{background:var(--okS);color:var(--ok)}.b-warn{background:var(--warnS);color:var(--warn)}.b-err{background:var(--errS);color:var(--err)}.b-blue{background:var(--blueS);color:var(--blue)}
+
+/* FILTER BAR */
+.filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.filter-bar label{font-size:12px;font-weight:600;color:var(--textM)}
+select{padding:6px 12px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);font-size:12.5px;color:var(--textM);outline:none;cursor:pointer;font-family:inherit}
+select:focus{border-color:var(--coral)}
+
+/* LTV PROJECTION */
+.ltv-proj{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.ltv-box{background:var(--surface);border:1.5px solid var(--borderL);border-radius:var(--r);padding:16px;text-align:center;box-shadow:var(--sh)}
+.ltv-box .val{font-size:24px;font-weight:800;color:var(--coral);margin-bottom:4px}
+.ltv-box .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.ltv-box .sub{font-size:11.5px;color:var(--textM);margin-top:4px}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(28,20,16,.45);z-index:999;align-items:center;justify-content:center}
+.overlay.show{display:flex}
+.modal{background:var(--surface);border-radius:16px;padding:28px;width:480px;max-width:94vw;box-shadow:0 20px 60px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto}
+.modal h2{font-size:17px;font-weight:700;margin-bottom:6px}
+.modal p{font-size:12.5px;color:var(--muted);margin-bottom:18px}
+.fsec{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--coral);margin:14px 0 8px;padding-bottom:4px;border-bottom:1.5px solid var(--borderL)}
+.fi{margin-bottom:10px}
+.fi label{display:block;font-size:11.5px;font-weight:600;color:var(--textM);margin-bottom:4px}
+.fi input{width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--rs);font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;background:#fafafa}
+.fi input:focus{border-color:var(--coral);background:#fff}
+.fi .hint{font-size:11px;color:var(--muted);margin-top:3px}
+.modal-btns{display:flex;gap:8px;margin-top:18px}
+.btn-save{flex:1;background:var(--coral);color:#fff;border:none;padding:10px;border-radius:var(--rs);font-size:13.5px;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-save:hover{background:var(--coralH)}
+.btn-cancel{padding:10px 18px;border:1.5px solid var(--border);background:transparent;border-radius:var(--rs);font-size:13px;cursor:pointer;color:var(--textM)}
+.btn-cancel:hover{background:var(--surface2)}
+
+/* INFO NOTE */
+.info-note{background:var(--warnS);border:1.5px solid rgba(217,119,6,.25);border-radius:var(--rs);padding:10px 14px;font-size:12px;color:var(--warn);margin-bottom:16px}
+.info-note.ok{background:var(--okS);border-color:rgba(22,163,74,.25);color:var(--ok)}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  #sb{width:56px}
+  .sb-name,.sb-sub,.ni span,.sb-lbl,#cfgBtn span{display:none}
+  #main{margin-left:56px;padding:16px}
+  .g2,.g3,.g3r{grid-template-columns:1fr}
+  .ltv-proj{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sb">
+  <div class="sb-logo">
+    <div class="sb-ico">E</div>
+    <div>
+      <div class="sb-name">Estrategas</div>
+      <div class="sb-sub">Control de Negocio</div>
+    </div>
+  </div>
+  <div class="sb-grp">
+    <div class="sb-lbl">Paneles</div>
+    <button class="ni on" onclick="nav('resumen',this)"><span class="ni-ico">📊</span><span>Resumen</span></button>
+    <button class="ni" onclick="nav('grupos',this)"><span class="ni-ico">👥</span><span>Por Grupo</span></button>
+    <button class="ni" onclick="nav('retencion',this)"><span class="ni-ico">🔄</span><span>Retención</span></button>
+    <button class="ni" onclick="nav('ltv',this)"><span class="ni-ico">💰</span><span>LTV</span></button>
+  </div>
+  <div class="sb-grp" style="margin-top:auto;padding-top:8px">
+    <div class="sb-lbl">Accesos</div>
+    <a href="index.html" class="ni" style="text-decoration:none"><span class="ni-ico">📲</span><span>Marketing</span></a>
+  </div>
+  <div class="sb-foot">
+    <button id="cfgBtn" onclick="openM()">
+      <span style="font-size:15px">⚙️</span>
+      <span>Configuración</span>
+    </button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <h1>Control de Negocio</h1>
+      <p id="topbar-sub">Cargando datos...</p>
+    </div>
+    <div class="topbar-r">
+      <span class="date-pill" id="date-pill">—</span>
+      <button class="ref-btn" onclick="loadAll()" id="refBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Actualizar
+      </button>
+    </div>
+  </div>
+
+  <!-- STATUS ROW -->
+  <div class="status-row">
+    <div class="chip"><div class="dot d-live" id="status-dot"></div><span id="status-txt">Conectando…</span></div>
+    <div class="chip">🏋️ Airtable — Fichas Atletas</div>
+    <div class="mode live" id="mode-badge">LIVE</div>
+  </div>
+
+  <!-- ═══ SECTION: RESUMEN ═══ -->
+  <section id="sec-resumen" class="sec on">
+    <div id="demo-note" class="info-note" style="display:none">
+      ⚠️ Airtable no configurado — mostrando datos de ejemplo.
+      <a href="#" onclick="openM();return false" style="color:var(--warn);font-weight:700"> Configurar →</a>
+    </div>
+    <div class="kpi-g">
+      <div class="kpi kc-coral">
+        <div class="kpi-ico">🏋️</div>
+        <div class="kpi-lbl">Clientes Activos</div>
+        <div class="kpi-val" id="kpi-activos">—</div>
+        <div class="kpi-d">Todos los grupos</div>
+      </div>
+      <div class="kpi kc-warn">
+        <div class="kpi-ico">⏸️</div>
+        <div class="kpi-lbl">Stand By</div>
+        <div class="kpi-val" id="kpi-standby">—</div>
+        <div class="kpi-d">Pausados temporalmente</div>
+      </div>
+      <div class="kpi kc-ok">
+        <div class="kpi-ico">✅</div>
+        <div class="kpi-lbl">Altas del Mes</div>
+        <div class="kpi-val" id="kpi-altas">—</div>
+        <div class="kpi-d" id="kpi-altas-d">Nuevos este mes</div>
+      </div>
+      <div class="kpi kc-err">
+        <div class="kpi-ico">❌</div>
+        <div class="kpi-lbl">Bajas del Mes</div>
+        <div class="kpi-val" id="kpi-bajas">3</div>
+        <div class="kpi-d">Cancelaciones este mes</div>
+      </div>
+      <div class="kpi kc-blue">
+        <div class="kpi-ico">📈</div>
+        <div class="kpi-lbl">LTV Medio</div>
+        <div class="kpi-val sm">585€</div>
+        <div class="kpi-d">Cohorte 2025</div>
+      </div>
+      <div class="kpi kc-purple">
+        <div class="kpi-ico">🔄</div>
+        <div class="kpi-lbl">Permanencia Media</div>
+        <div class="kpi-val sm">232 días</div>
+        <div class="kpi-d">~7,7 meses · retención est.</div>
+      </div>
+    </div>
+
+    <!-- Highlight row -->
+    <div class="cg g2" style="margin-bottom:18px">
+      <div class="cc">
+        <h3>Distribución por Grupo <small>clientes activos</small></h3>
+        <div class="cw h220"><canvas id="ch-grupos-resumen"></canvas></div>
+      </div>
+      <div class="cc">
+        <h3>Estado general <small>datos actuales</small></h3>
+        <div class="grp-list" id="grp-list-resumen" style="margin-top:6px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SECTION: GRUPOS ═══ -->
+  <section id="sec-grupos" class="sec">
+    <div class="filter-bar">
+      <label>Filtrar grupo:</label>
+      <select id="grupo-filter" onchange="renderGrupos()">
+        <option value="">Todos los grupos</option>
+        <option>Estra.Men A</option>
+        <option>Estra.Men B</option>
+        <option>Estra.Men P</option>
+        <option>Estra.Men A LC</option>
+        <option>Estra.Sem A</option>
+        <option>Estra.Sem B</option>
+        <option>Estra.Sem P</option>
+      </select>
+    </div>
+    <div class="kpi-g" id="grupos-kpis"></div>
+    <div class="cg g2">
+      <div class="cc">
+        <h3>Clientes por Grupo <small>barras</small></h3>
+        <div class="cw h250"><canvas id="ch-grupos-bar"></canvas></div>
+      </div>
+      <div class="cc">
+        <h3>% del Total <small>distribución</small></h3>
+        <div class="cw h250"><canvas id="ch-grupos-pie"></canvas></div>
+      </div>
+    </div>
+    <div class="cc" style="margin-bottom:18px">
+      <h3>Capacidad por Grupo <small>estimación máximos</small></h3>
+      <div class="grp-list" id="grp-capacity-list" style="margin-top:8px"></div>
+    </div>
+    <div class="cc">
+      <h3>Listado de Clientes <small>datos live Airtable</small></h3>
+      <div class="tbl-wrap">
+        <table id="clientes-table">
+          <thead>
+            <tr>
+              <th>Nombre</th><th>Grupo</th><th>Estado</th><th>Plan</th><th>Alta</th>
+            </tr>
+          </thead>
+          <tbody id="clientes-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SECTION: RETENCIÓN ═══ -->
+  <section id="sec-retencion" class="sec">
+    <div class="kpi-g">
+      <div class="kpi kc-blue">
+        <div class="kpi-ico">📅</div>
+        <div class="kpi-lbl">Permanencia Media</div>
+        <div class="kpi-val sm">232 días</div>
+        <div class="kpi-d">~7,7 meses por cliente</div>
+      </div>
+      <div class="kpi kc-err">
+        <div class="kpi-ico">⚠️</div>
+        <div class="kpi-lbl">Churn en 1eros 6 meses</div>
+        <div class="kpi-val sm">55%</div>
+        <div class="kpi-d">De todas las bajas históricas</div>
+      </div>
+      <div class="kpi kc-warn">
+        <div class="kpi-ico">📉</div>
+        <div class="kpi-lbl">Total Bajas Históricas</div>
+        <div class="kpi-val">494</div>
+        <div class="kpi-d">Bernat+Alex+Patricia+Antonio+Edu+Xim</div>
+      </div>
+      <div class="kpi kc-ok">
+        <div class="kpi-ico">💪</div>
+        <div class="kpi-lbl">Retención Estimada</div>
+        <div class="kpi-val sm">~71%</div>
+        <div class="kpi-d">A 6 meses (1 - 0.55 × churn rate)</div>
+      </div>
+    </div>
+
+    <div class="cg g2">
+      <div class="cc">
+        <h3>Causas de Baja <small>distribución histórica</small></h3>
+        <div class="cw h250"><canvas id="ch-causas"></canvas></div>
+      </div>
+      <div class="cc">
+        <h3>Bajas por Entrenador <small>total histórico</small></h3>
+        <div class="cw h250"><canvas id="ch-entrenadores"></canvas></div>
+      </div>
+    </div>
+
+    <div class="cc" style="margin-bottom:18px">
+      <h3>Distribución Temporal de Bajas <small>% en cada tramo de permanencia</small></h3>
+      <div class="cw h200"><canvas id="ch-retencion-tramos"></canvas></div>
+    </div>
+  </section>
+
+  <!-- ═══ SECTION: LTV ═══ -->
+  <section id="sec-ltv" class="sec">
+    <div class="ltv-proj">
+      <div class="ltv-box">
+        <div class="val">585€</div>
+        <div class="lbl">LTV Medio</div>
+        <div class="sub">Cohorte 2025</div>
+      </div>
+      <div class="ltv-box">
+        <div class="val" id="ltv-total">—</div>
+        <div class="lbl">LTV Cartera Actual</div>
+        <div class="sub" id="ltv-total-sub">activos × 585€</div>
+      </div>
+      <div class="ltv-box">
+        <div class="val" id="ltv-anual">—</div>
+        <div class="lbl">Proyección Anual</div>
+        <div class="sub" id="ltv-anual-sub">activos × precio plan × 12</div>
+      </div>
+    </div>
+
+    <div class="cg g2">
+      <div class="cc">
+        <h3>LTV por Grupo <small>estimado por precio plan medio</small></h3>
+        <div class="cw h250"><canvas id="ch-ltv-grupos"></canvas></div>
+      </div>
+      <div class="cc">
+        <h3>Ingresos Recurrentes Mensuales <small>estimación por grupo</small></h3>
+        <div class="cw h250"><canvas id="ch-mrr"></canvas></div>
+      </div>
+    </div>
+
+    <div class="cc" style="margin-bottom:18px">
+      <h3>Evolución LTV Proyectada <small>crecimiento estimado con retención actual</small></h3>
+      <div class="cw h220"><canvas id="ch-ltv-evolucion"></canvas></div>
+    </div>
+
+    <div class="cc">
+      <h3>LTV por Plan Contratado</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Plan</th><th>Clientes</th><th>Precio/mes est.</th><th>MRR</th><th>LTV (232 días)</th></tr></thead>
+          <tbody id="ltv-tabla-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /main -->
+
+<!-- CONFIG MODAL -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeM()">
+  <div class="modal">
+    <h2>⚙️ Configuración</h2>
+    <p>Las credenciales se guardan solo en sesión (localStorage). Nunca en el código fuente.</p>
+    <div class="fsec">🏋️ Airtable — Fichas Atletas</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:9px">
+      Introduce tu Personal Access Token de Airtable. El Base ID ya está preconfigurado.
+    </p>
+    <div class="fi">
+      <label>Personal Access Token (PAT)</label>
+      <input id="cfg-at-pat" type="password" placeholder="patxxxxxxxx.xxxxxxxx"/>
+      <div class="hint">Genera tu PAT en airtable.com/create/tokens</div>
+    </div>
+    <div class="fi">
+      <label>Base ID <span style="color:var(--muted)">(preconfigurado)</span></label>
+      <input id="cfg-at-base" type="text" placeholder="app8nkARmupm6hbW1"/>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeM()">Cancelar</button>
+      <button class="btn-save" onclick="saveCfg()">💾 Guardar y cargar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──
+const CFG_KEY = 'estrategas_biz_cfg';
+let CFG = {};
+(function(){
+  try { CFG = JSON.parse(localStorage.getItem(CFG_KEY) || '{}'); } catch(e){}
+  if (!CFG.atPat) CFG.atPat = '';
+  if (!CFG.atBase) CFG.atBase = 'app8nkARmupm6hbW1';
+  if (!CFG.atTable) CFG.atTable = 'tbl7qJ7wCiUM8XNev';
+})();
+
+function saveCFG(){ try{ localStorage.setItem(CFG_KEY, JSON.stringify(CFG)); }catch(e){} }
+
+// ── DATA STATE ──
+let ALL_RECORDS = [];
+let isLive = false;
+
+// ── HARDCODED STATIC DATA ──
+const STATIC = {
+  standby: 0,
+  bajasMes: 3,
+  ltv: 585,
+  permanencia: 232,
+  churnPrimeros6m: 55,
+
+  causasBaja: [
+    { label: 'Problemas personales', value: 148 },
+    { label: 'Económicas', value: 127 },
+    { label: 'Objetivos cumplidos', value: 89 },
+    { label: 'No entrenaba', value: 72 },
+    { label: 'Lesión', value: 38 },
+    { label: 'Cambio entrenador', value: 13 },
+    { label: 'Otras', value: 7 }
+  ],
+
+  bajasPorEntrenador: [
+    { nombre: 'Bernat', bajas: 165 },
+    { nombre: 'Alejandro', bajas: 126 },
+    { nombre: 'Patricia', bajas: 89 },
+    { nombre: 'Antonio', bajas: 85 },
+    { nombre: 'Eduardo', bajas: 23 },
+    { nombre: 'Xim', bajas: 6 }
+  ],
+
+  tramosRetencion: [
+    { label: '0-3 meses', pct: 28 },
+    { label: '3-6 meses', pct: 27 },
+    { label: '6-12 meses', pct: 22 },
+    { label: '12-18 meses', pct: 13 },
+    { label: '18-24 meses', pct: 7 },
+    { label: '+24 meses', pct: 3 }
+  ],
+
+  capacidadGrupos: {
+    'Estra.Men A': 20,
+    'Estra.Men B': 20,
+    'Estra.Men P': 15,
+    'Estra.Men A LC': 15,
+    'Estra.Sem A': 40,
+    'Estra.Sem B': 30,
+    'Estra.Sem P': 15
+  },
+
+  preciosPlan: {
+    'Basic Edition': 75,
+    'Basic': 75,
+    'Premium': 120,
+    'Pro': 99,
+    '(sin plan)': 79
+  }
+};
+
+const GRUPO_COLORS = [
+  '#FF6248','#FF8C7A','#3B82F6','#8B5CF6','#10B981','#F59E0B','#EC4899','#06B6D4'
+];
+
+// ── MODAL ──
+function openM(){
+  document.getElementById('cfg-at-pat').value = CFG.atPat || '';
+  document.getElementById('cfg-at-base').value = CFG.atBase || 'app8nkARmupm6hbW1';
+  document.getElementById('overlay').classList.add('show');
+}
+function closeM(){ document.getElementById('overlay').classList.remove('show'); }
+function saveCfg(){
+  CFG.atPat = document.getElementById('cfg-at-pat').value.trim();
+  CFG.atBase = document.getElementById('cfg-at-base').value.trim() || 'app8nkARmupm6hbW1';
+  saveCFG();
+  closeM();
+  loadAll();
+}
+
+// ── NAV ──
+function nav(id, btn){
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
+  document.getElementById('sec-' + id).classList.add('on');
+  document.querySelectorAll('.ni').forEach(b => b.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+}
+
+// ── DATE ──
+function fmtDate(d){
+  return d.toLocaleDateString('es-ES', {day:'2-digit', month:'short', year:'numeric'});
+}
+document.getElementById('date-pill').textContent = fmtDate(new Date());
+
+// ── AIRTABLE FETCH ──
+async function fetchAirtable(){
+  if(!CFG.atPat){
+    return null; // sin PAT → modo demo
+  }
+  const base = CFG.atBase;
+  const table = CFG.atTable;
+  let all = [];
+  let offset = null;
+  try {
+    do {
+      let url = `https://api.airtable.com/v0/${base}/${table}?maxRecords=100`;
+      if(offset) url += `&offset=${encodeURIComponent(offset)}`;
+      const r = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${CFG.atPat}` }
+      });
+      if(!r.ok) throw new Error(`Airtable error: ${r.status}`);
+      const data = await r.json();
+      all = all.concat(data.records);
+      offset = data.offset || null;
+    } while(offset);
+    return all;
+  } catch(e){
+    console.error('Airtable fetch error:', e);
+    return null;
+  }
+}
+
+// ── DEMO DATA ──
+function buildDemoRecords(){
+  const grupos = ['Estra.Men A','Estra.Men B','Estra.Men P','Estra.Men A LC','Estra.Sem A','Estra.Sem B','Estra.Sem P'];
+  const counts = [13,7,11,10,31,18,9];
+  const nombres = ['Carlos M.','Pablo R.','Ana L.','Juan G.','María S.','Sergio F.','Elena T.','Marcos D.','Laura P.','Roberto V.'];
+  const records = [];
+  const now = new Date();
+  let id = 1;
+  grupos.forEach((g, gi) => {
+    for(let i = 0; i < counts[gi]; i++){
+      const daysAgo = Math.floor(Math.random()*400);
+      const ct = new Date(now.getTime() - daysAgo*86400000);
+      records.push({
+        id: `rec_demo_${id++}`,
+        createdTime: ct.toISOString(),
+        fields: {
+          Nombre: nombres[i % nombres.length] + ' ' + id,
+          Grupo: g,
+          Estado: 'Activo',
+          'Plan contratado': Math.random() > 0.9 ? 'Basic Edition' : '(sin plan)'
+        }
+      });
+    }
+  });
+  return records;
+}
+
+// ── LOAD ALL ──
+async function loadAll(){
+  const btn = document.getElementById('refBtn');
+  btn.classList.add('spin');
+  document.getElementById('status-txt').textContent = 'Cargando…';
+  document.getElementById('status-dot').className = 'dot d-demo';
+
+  const records = await fetchAirtable();
+  if(records){
+    ALL_RECORDS = records;
+    isLive = true;
+    document.getElementById('status-txt').textContent = `Airtable conectado · ${records.length} registros`;
+    document.getElementById('status-dot').className = 'dot d-live';
+    document.getElementById('mode-badge').textContent = 'LIVE';
+    document.getElementById('mode-badge').className = 'mode live';
+    document.getElementById('demo-note').style.display = 'none';
+    document.getElementById('topbar-sub').textContent = `Última actualización: ${fmtDate(new Date())} — ${records.length} clientes en Airtable`;
+  } else {
+    ALL_RECORDS = buildDemoRecords();
+    isLive = false;
+    document.getElementById('status-txt').textContent = 'Modo demo — configura Airtable';
+    document.getElementById('status-dot').className = 'dot d-demo';
+    document.getElementById('mode-badge').textContent = 'DEMO';
+    document.getElementById('mode-badge').className = 'mode';
+    document.getElementById('demo-note').style.display = 'block';
+    document.getElementById('topbar-sub').textContent = 'Datos de ejemplo · configura el PAT de Airtable para datos reales';
+  }
+
+  btn.classList.remove('spin');
+  renderAll();
+}
+
+// ── COMPUTE GROUPS ──
+function getGroupCounts(filter){
+  const counts = {};
+  ALL_RECORDS.forEach(r => {
+    const g = r.fields.Grupo || '(sin grupo)';
+    if(filter && g !== filter) return;
+    counts[g] = (counts[g] || 0) + 1;
+  });
+  return counts;
+}
+
+// ── ALTAS DEL MES ──
+function getAltasMes(){
+  const now = new Date();
+  return ALL_RECORDS.filter(r => {
+    const ct = new Date(r.createdTime);
+    return ct.getFullYear() === now.getFullYear() && ct.getMonth() === now.getMonth();
+  }).length;
+}
+
+// ── PLAN COUNTS ──
+function getPlanCounts(){
+  const counts = {};
+  ALL_RECORDS.forEach(r => {
+    const p = r.fields['Plan contratado'] || '(sin plan)';
+    counts[p] = (counts[p] || 0) + 1;
+  });
+  return counts;
+}
+
+// ── CHART HELPERS ──
+let _charts = {};
+function mkChart(id, cfg){
+  if(_charts[id]){ _charts[id].destroy(); }
+  const ctx = document.getElementById(id);
+  if(!ctx) return;
+  _charts[id] = new Chart(ctx, cfg);
+}
+
+const C = {
+  coral:'#FF6248', coralA:'rgba(255,98,72,0.75)', coralGrid:'rgba(255,98,72,0.12)',
+  ok:'#16A34A', warn:'#D97706', err:'#DC2626', blue:'#1877F2', purple:'#7C3AED',
+  text:'#1C1410', muted:'#9C8A84', border:'rgba(255,216,206,0.6)',
+  surface:'#FFFFFF'
+};
+
+const baseOpts = {
+  responsive:true, maintainAspectRatio:false,
+  plugins:{ legend:{ display:false }, tooltip:{ backgroundColor:'#1C1410', titleFont:{size:12}, bodyFont:{size:11.5}, padding:10, cornerRadius:8 }},
+  scales:{
+    x:{ grid:{ color:C.border }, ticks:{ color:C.muted, font:{size:11} }},
+    y:{ grid:{ color:C.border }, ticks:{ color:C.muted, font:{size:11} }, beginAtZero:true }
+  }
+};
+
+// ── RENDER ALL ──
+function renderAll(){
+  renderResumen();
+  renderGrupos();
+  renderRetencion();
+  renderLTV();
+}
+
+// ── RENDER RESUMEN ──
+function renderResumen(){
+  const total = ALL_RECORDS.filter(r => (r.fields.Estado || 'Activo') === 'Activo').length;
+  const standby = ALL_RECORDS.filter(r => r.fields.Estado === 'Stand By').length + STATIC.standby;
+  const altas = getAltasMes();
+  const now = new Date();
+  const mesNombre = now.toLocaleDateString('es-ES', {month:'long', year:'numeric'});
+
+  document.getElementById('kpi-activos').textContent = total;
+  document.getElementById('kpi-standby').textContent = standby;
+  document.getElementById('kpi-altas').textContent = altas;
+  document.getElementById('kpi-altas-d').textContent = `Nuevos en ${mesNombre}`;
+
+  // Group donut
+  const gc = getGroupCounts();
+  const labels = Object.keys(gc).filter(k => k !== '(sin grupo)');
+  const vals = labels.map(l => gc[l]);
+  const colors = labels.map((_, i) => GRUPO_COLORS[i % GRUPO_COLORS.length]);
+
+  mkChart('ch-grupos-resumen', {
+    type:'doughnut',
+    data:{ labels, datasets:[{ data:vals, backgroundColor:colors, borderWidth:2, borderColor:'#fff' }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ display:true, position:'right', labels:{ color:C.text, font:{size:11}, boxWidth:12, padding:8 }},
+        tooltip:{ backgroundColor:'#1C1410', padding:10, cornerRadius:8, callbacks:{
+          label: ctx => ` ${ctx.label}: ${ctx.parsed} (${((ctx.parsed/total)*100).toFixed(1)}%)`
+        }}
+      }
+    }
+  });
+
+  // Summary bar list
+  const sorted = labels.slice().sort((a,b) => gc[b]-gc[a]);
+  const container = document.getElementById('grp-list-resumen');
+  container.innerHTML = sorted.map((g,i) => `
+    <div class="grp-row">
+      <div class="grp-lbl">${g}</div>
+      <div class="grp-bar-wrap"><div class="grp-bar" style="width:${(gc[g]/total*100).toFixed(1)}%;background:${GRUPO_COLORS[i%GRUPO_COLORS.length]}"></div></div>
+      <div class="grp-cnt">${gc[g]}</div>
+      <div class="grp-pct">${((gc[g]/total)*100).toFixed(0)}%</div>
+    </div>`).join('');
+}
+
+// ── RENDER GRUPOS ──
+function renderGrupos(){
+  const filter = document.getElementById('grupo-filter').value;
+  const gc = getGroupCounts();
+  const total = ALL_RECORDS.length;
+
+  const grupos = Object.keys(STATIC.capacidadGrupos);
+
+  // KPI cards
+  const kpiContainer = document.getElementById('grupos-kpis');
+  kpiContainer.innerHTML = grupos.filter(g => !filter || g === filter).map((g, i) => {
+    const n = gc[g] || 0;
+    const cap = STATIC.capacidadGrupos[g];
+    const pct = total > 0 ? ((n/total)*100).toFixed(1) : 0;
+    const capPct = Math.min(100, (n/cap*100)).toFixed(0);
+    const color = ['kc-coral','kc-blue','kc-ok','kc-warn','kc-purple','kc-err','kc-blue'][i%7];
+    return `<div class="kpi ${color}">
+      <div class="kpi-lbl">${g}</div>
+      <div class="kpi-val">${n}</div>
+      <div class="kpi-d">${pct}% del total · cap. ${capPct}%</div>
+    </div>`;
+  }).join('');
+
+  // Bar chart
+  const fGroups = filter ? [filter] : grupos;
+  const vals = fGroups.map(g => gc[g] || 0);
+  const colors = fGroups.map((_, i) => GRUPO_COLORS[i % GRUPO_COLORS.length]);
+
+  mkChart('ch-grupos-bar', {
+    type:'bar',
+    data:{ labels:fGroups, datasets:[{ label:'Clientes activos', data:vals, backgroundColor:colors, borderRadius:6, borderSkipped:false }]},
+    options:{ ...baseOpts,
+      plugins:{ ...baseOpts.plugins, legend:{ display:false }},
+      scales:{ x:{ grid:{color:C.border}, ticks:{color:C.muted,font:{size:10.5}} }, y:{ ...baseOpts.scales.y, ticks:{color:C.muted,font:{size:11},stepSize:5} }}
+    }
+  });
+
+  // Pie chart
+  mkChart('ch-grupos-pie', {
+    type:'pie',
+    data:{ labels:fGroups, datasets:[{ data:vals, backgroundColor:colors, borderWidth:2, borderColor:'#fff' }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ display:true, position:'bottom', labels:{ color:C.text, font:{size:10.5}, boxWidth:12, padding:8 }},
+        tooltip:{ backgroundColor:'#1C1410', padding:10, cornerRadius:8, callbacks:{
+          label: ctx => ` ${ctx.label}: ${ctx.parsed} (${((ctx.parsed/(vals.reduce((a,b)=>a+b,0)||1))*100).toFixed(1)}%)`
+        }}
+      }
+    }
+  });
+
+  // Capacity bars
+  const capContainer = document.getElementById('grp-capacity-list');
+  capContainer.innerHTML = fGroups.map((g, i) => {
+    const n = gc[g] || 0;
+    const cap = STATIC.capacidadGrupos[g] || 20;
+    const pct = Math.min(100, (n/cap*100));
+    const color = pct >= 90 ? C.err : pct >= 70 ? C.warn : GRUPO_COLORS[i % GRUPO_COLORS.length];
+    return `<div class="grp-row">
+      <div class="grp-lbl">${g}</div>
+      <div class="grp-bar-wrap"><div class="grp-bar" style="width:${pct.toFixed(1)}%;background:${color}"></div></div>
+      <div class="grp-cnt">${n}/${cap}</div>
+      <div class="grp-pct">${pct.toFixed(0)}%</div>
+    </div>`;
+  }).join('');
+
+  // Table
+  const filtered = ALL_RECORDS.filter(r => !filter || r.fields.Grupo === filter);
+  const tbody = document.getElementById('clientes-tbody');
+  tbody.innerHTML = filtered.slice(0, 100).map(r => {
+    const f = r.fields;
+    const estado = f.Estado || 'Activo';
+    const badgeClass = estado === 'Activo' ? 'b-ok' : estado === 'Stand By' ? 'b-warn' : 'b-err';
+    const alta = r.createdTime ? new Date(r.createdTime).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+    const plan = f['Plan contratado'] || '—';
+    return `<tr>
+      <td style="font-weight:600;color:var(--text)">${f.Nombre || '—'}</td>
+      <td>${f.Grupo || '—'}</td>
+      <td><span class="badge ${badgeClass}">${estado}</span></td>
+      <td>${plan}</td>
+      <td style="color:var(--muted)">${alta}</td>
+    </tr>`;
+  }).join('');
+
+  if(filtered.length > 100){
+    tbody.innerHTML += `<tr><td colspan="5" style="text-align:center;color:var(--muted);font-style:italic">... y ${filtered.length - 100} más</td></tr>`;
+  }
+}
+
+// ── RENDER RETENCIÓN ──
+function renderRetencion(){
+  const causas = STATIC.causasBaja;
+  const entrenadores = STATIC.bajasPorEntrenador;
+  const tramos = STATIC.tramosRetencion;
+
+  // Causas de baja
+  mkChart('ch-causas', {
+    type:'bar',
+    data:{
+      labels: causas.map(c => c.label),
+      datasets:[{ label:'Bajas', data: causas.map(c => c.value),
+        backgroundColor: [C.coral,'rgba(255,98,72,0.75)','rgba(255,98,72,0.6)','rgba(255,98,72,0.5)','rgba(255,140,122,0.8)','rgba(255,140,122,0.6)','rgba(255,160,150,0.5)'],
+        borderRadius:5, borderSkipped:false }]
+    },
+    options:{ ...baseOpts,
+      indexAxis:'y',
+      scales:{
+        x:{ grid:{color:C.border}, ticks:{color:C.muted,font:{size:11}}, beginAtZero:true },
+        y:{ grid:{display:false}, ticks:{color:C.text,font:{size:11}} }
+      }
+    }
+  });
+
+  // Bajas por entrenador
+  const eColors = ['#FF6248','#3B82F6','#8B5CF6','#10B981','#F59E0B','#EC4899'];
+  mkChart('ch-entrenadores', {
+    type:'bar',
+    data:{
+      labels: entrenadores.map(e => e.nombre),
+      datasets:[{ label:'Bajas totales', data: entrenadores.map(e => e.bajas),
+        backgroundColor: eColors, borderRadius:6, borderSkipped:false }]
+    },
+    options:{ ...baseOpts,
+      plugins:{ ...baseOpts.plugins,
+        tooltip:{ backgroundColor:'#1C1410', padding:10, cornerRadius:8, callbacks:{
+          label: ctx => ` ${ctx.parsed.y} bajas gestionadas`
+        }}
+      }
+    }
+  });
+
+  // Tramos retención
+  mkChart('ch-retencion-tramos', {
+    type:'bar',
+    data:{
+      labels: tramos.map(t => t.label),
+      datasets:[{
+        label:'% de bajas',
+        data: tramos.map(t => t.pct),
+        backgroundColor: tramos.map((t,i) => i < 2 ? C.err : i < 4 ? C.warn : C.ok),
+        borderRadius:6, borderSkipped:false
+      }]
+    },
+    options:{ ...baseOpts,
+      plugins:{ ...baseOpts.plugins,
+        tooltip:{ backgroundColor:'#1C1410', padding:10, cornerRadius:8, callbacks:{
+          label: ctx => ` ${ctx.parsed.y}% de las bajas ocurren en este tramo`
+        }}
+      },
+      scales:{
+        x:{ grid:{color:C.border}, ticks:{color:C.muted,font:{size:11}} },
+        y:{ grid:{color:C.border}, ticks:{color:C.muted,font:{size:11}, callback: v => v+'%'}, beginAtZero:true, max:40 }
+      }
+    }
+  });
+}
+
+// ── RENDER LTV ──
+function renderLTV(){
+  const total = ALL_RECORDS.length;
+  const ltv = STATIC.ltv;
+  const diasMedia = STATIC.permanencia;
+
+  // Proyección cartera
+  document.getElementById('ltv-total').textContent = `${(total * ltv).toLocaleString('es-ES')}€`;
+  document.getElementById('ltv-total-sub').textContent = `${total} activos × ${ltv}€ LTV medio`;
+
+  // Plan medio estimado: 79€/mes (precio plan básico)
+  const precioMedioMes = 79;
+  const mrr = total * precioMedioMes;
+  const arr = mrr * 12;
+  document.getElementById('ltv-anual').textContent = `${arr.toLocaleString('es-ES')}€`;
+  document.getElementById('ltv-anual-sub').textContent = `${total} activos × ${precioMedioMes}€/mes × 12`;
+
+  // LTV por grupo
+  const gc = getGroupCounts();
+  const grupos = Object.keys(STATIC.capacidadGrupos);
+  const ltvGrupoVals = grupos.map(g => (gc[g] || 0) * ltv);
+  const mrrGrupoVals = grupos.map(g => (gc[g] || 0) * precioMedioMes);
+
+  mkChart('ch-ltv-grupos', {
+    type:'bar',
+    data:{
+      labels: grupos,
+      datasets:[{ label:'LTV estimado (€)', data:ltvGrupoVals,
+        backgroundColor: grupos.map((_,i)=>GRUPO_COLORS[i%GRUPO_COLORS.length]),
+        borderRadius:6, borderSkipped:false }]
+    },
+    options:{ ...baseOpts,
+      scales:{
+        x:{ grid:{color:C.border}, ticks:{color:C.muted,font:{size:10.5}} },
+        y:{ grid:{color:C.border}, ticks:{color:C.muted,font:{size:11}, callback: v => v.toLocaleString('es-ES')+'€'}, beginAtZero:true }
+      }
+    }
+  });
+
+  mkChart('ch-mrr', {
+    type:'bar',
+    data:{
+      labels: grupos,
+      datasets:[{ label:'MRR estimado (€/mes)', data:mrrGrupoVals,
+        backgroundColor: grupos.map((_,i)=>GRUPO_COLORS[i%GRUPO_COLORS.length]+'CC'),
+        borderRadius:6, borderSkipped:false }]
+    },
+    options:{ ...baseOpts,
+      scales:{
+        x:{ grid:{color:C.border}, ticks:{color:C.muted,font:{size:10.5}} },
+        y:{ grid:{color:C.border}, ticks:{color:C.muted,font:{size:11}, callback: v => v+'€'}, beginAtZero:true }
+      }
+    }
+  });
+
+  // Evolución LTV proyectada (12 meses)
+  const meses = Array.from({length:13}, (_,i) => i === 0 ? 'Hoy' : `M+${i}`);
+  const retencionMensual = Math.pow(1 - (1/( diasMedia/30)), 1); // aprox mensual
+  const retPct = 0.93; // ~7% churn mensual estimado basado en 232 días media
+  const ltvEvolucion = meses.map((_,i) => {
+    const activosEst = Math.round(total * Math.pow(retPct, i));
+    return activosEst * precioMedioMes;
+  });
+
+  mkChart('ch-ltv-evolucion', {
+    type:'line',
+    data:{
+      labels: meses,
+      datasets:[{
+        label:'MRR proyectado (€)',
+        data: ltvEvolucion,
+        borderColor: C.coral, backgroundColor:'rgba(255,98,72,0.08)',
+        borderWidth:2, pointRadius:3, pointBackgroundColor:C.coral, fill:true, tension:0.3
+      }]
+    },
+    options:{ ...baseOpts,
+      scales:{
+        x:{ grid:{color:C.border}, ticks:{color:C.muted,font:{size:11}} },
+        y:{ grid:{color:C.border}, ticks:{color:C.muted,font:{size:11}, callback: v => v.toLocaleString('es-ES')+'€'}, beginAtZero:false }
+      }
+    }
+  });
+
+  // Tabla planes
+  const planCounts = getPlanCounts();
+  const tbody = document.getElementById('ltv-tabla-tbody');
+  tbody.innerHTML = Object.entries(planCounts).map(([plan, n]) => {
+    const precio = STATIC.preciosPlan[plan] || 79;
+    const mrr_plan = n * precio;
+    const ltv_plan = Math.round(precio * (diasMedia / 30));
+    return `<tr>
+      <td style="font-weight:600">${plan}</td>
+      <td>${n}</td>
+      <td>${precio}€/mes</td>
+      <td style="color:var(--ok);font-weight:600">${mrr_plan.toLocaleString('es-ES')}€</td>
+      <td style="color:var(--blue);font-weight:600">${ltv_plan.toLocaleString('es-ES')}€</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── INIT ──
+loadAll();
+</script>
+</body>
+</html>
