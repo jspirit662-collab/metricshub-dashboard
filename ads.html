@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Estrategas — Meta Ads</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#FFF5F2; --surface:#FFFFFF; --surface2:#FFF0EC; --border:#FFD8CE; --borderL:#FFE8E2;
+  --text:#1C1410; --textM:#4A3B35; --muted:#9C8A84;
+  --coral:#FF6248; --coralH:#E8503A; --coralS:rgba(255,98,72,.1); --coralM:rgba(255,98,72,.22);
+  --ok:#16A34A; --okS:rgba(22,163,74,.1);
+  --warn:#D97706; --warnS:rgba(217,119,6,.1);
+  --err:#DC2626; --errS:rgba(220,38,38,.1);
+  --blue:#1877F2; --blueS:rgba(24,119,242,.1);
+  --purple:#7C3AED; --purpleS:rgba(124,58,237,.1);
+  --sh:0 1px 4px rgba(28,20,16,.08); --shM:0 4px 16px rgba(28,20,16,.1);
+  --r:12px; --rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',system-ui,sans-serif;min-height:100vh;font-size:14px;line-height:1.5}
+
+/* SIDEBAR */
+#sb{position:fixed;top:0;left:0;width:226px;height:100vh;background:var(--surface);border-right:1.5px solid var(--border);display:flex;flex-direction:column;z-index:100}
+.sb-logo{padding:18px 18px 14px;border-bottom:1.5px solid var(--borderL);display:flex;align-items:center;gap:10px}
+.sb-ico{width:36px;height:36px;background:var(--coral);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800;flex-shrink:0}
+.sb-name{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.sb-sub{font-size:10.5px;color:var(--muted);margin-top:1px}
+.sb-grp{padding:12px 10px 4px}
+.sb-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:0 8px;margin-bottom:3px}
+.ni{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border-radius:var(--rs);background:none;border:none;cursor:pointer;color:var(--muted);font-size:13.5px;text-align:left;transition:all .15s;margin-bottom:1px;text-decoration:none}
+.ni:hover{background:var(--surface2);color:var(--textM)}
+.ni.on{background:var(--coralS);color:var(--coral);font-weight:600}
+.ni-ico{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.sb-foot{margin-top:auto;padding:12px 10px;border-top:1.5px solid var(--borderL)}
+
+/* MAIN */
+#main{margin-left:226px;padding:26px 30px;min-height:100vh}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.topbar-l h1{font-size:20px;font-weight:700}
+.topbar-l p{font-size:12px;color:var(--muted);margin-top:2px}
+.topbar-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.period-badge{background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:6px 16px;font-size:12.5px;color:var(--textM);font-weight:600}
+
+/* KPI GRID */
+.kpi-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:13px;margin-bottom:20px}
+.kpi{background:var(--surface);border:1.5px solid var(--borderL);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0}
+.kc-coral::after{background:var(--coral)}.kc-ok::after{background:var(--ok)}.kc-warn::after{background:var(--warn)}.kc-blue::after{background:var(--blue)}.kc-purple::after{background:var(--purple)}
+.kpi-lbl{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px}
+.kpi-val{font-size:24px;font-weight:700;color:var(--text);line-height:1.1}
+.kpi-val.sm{font-size:18px}
+.kpi-d{margin-top:5px;font-size:11.5px;color:var(--muted)}
+.kpi-ico{position:absolute;top:14px;right:14px;font-size:20px;opacity:.12}
+
+/* FILTER ROW */
+.filter-row{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.filter-row label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.pill-group{display:flex;gap:4px;flex-wrap:wrap}
+.pill{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);font-size:12.5px;color:var(--textM);cursor:pointer;font-family:inherit;transition:all .15s;font-weight:500}
+.pill:hover{background:var(--surface2);border-color:var(--coral)}
+.pill.on{background:var(--coralS);border-color:var(--coral);color:var(--coral);font-weight:600}
+.sep{width:1px;height:28px;background:var(--borderL);margin:0 4px}
+select.sort-sel{padding:6px 12px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);font-size:12.5px;color:var(--textM);outline:none;cursor:pointer;font-family:inherit}
+select.sort-sel:focus{border-color:var(--coral)}
+
+/* CHART CARD */
+.cc{background:var(--surface);border:1.5px solid var(--borderL);border-radius:var(--r);padding:18px 20px;box-shadow:var(--sh);margin-bottom:18px}
+.cc h3{font-size:13px;font-weight:700;color:var(--text);margin-bottom:13px}
+.cc h3 small{color:var(--muted);font-weight:400;font-size:11px;margin-left:5px}
+.cw{position:relative}
+
+/* TABLE */
+.tbl-card{background:var(--surface);border:1.5px solid var(--borderL);border-radius:var(--r);padding:18px 20px;box-shadow:var(--sh);margin-bottom:18px}
+.tbl-card h3{font-size:13px;font-weight:700;color:var(--text);margin-bottom:13px}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{text-align:left;padding:8px 10px;font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--borderL);white-space:nowrap}
+th.r{text-align:right}
+td{padding:9px 10px;border-bottom:1px solid var(--borderL);color:var(--textM)}
+td.r{text-align:right}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.b-ok{background:var(--okS);color:var(--ok)}.b-warn{background:var(--warnS);color:var(--warn)}.b-err{background:var(--errS);color:var(--err)}
+.cost-ok{color:var(--ok);font-weight:700}
+.cost-mid{color:var(--warn);font-weight:700}
+.cost-hi{color:var(--err);font-weight:700}
+.cost-none{color:var(--muted)}
+.ad-name{font-weight:600;color:var(--text);max-width:240px}
+
+/* NOTE */
+.note{background:var(--blueS);border:1.5px solid rgba(24,119,242,.2);border-radius:var(--rs);padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:16px}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  #sb{width:56px}
+  .sb-name,.sb-sub,.ni span,.sb-lbl{display:none}
+  #main{margin-left:56px;padding:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sb">
+  <div class="sb-logo">
+    <div class="sb-ico">E</div>
+    <div>
+      <div class="sb-name">Estrategas</div>
+      <div class="sb-sub">Control de Negocio</div>
+    </div>
+  </div>
+  <div class="sb-grp">
+    <div class="sb-lbl">Marketing</div>
+    <a href="ads.html" class="ni on"><span class="ni-ico">📣</span><span>Meta Ads</span></a>
+  </div>
+  <div class="sb-grp">
+    <div class="sb-lbl">Negocio</div>
+    <a href="clientes.html" class="ni"><span class="ni-ico">👥</span><span>Clientes</span></a>
+    <a href="index.html" class="ni"><span class="ni-ico">📊</span><span>Marketing</span></a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-l">
+      <h1>Meta Ads — Rendimiento por Anuncio</h1>
+      <p>Cuenta: Vol ETR (correcta) · Campaña: [TT-TF] Formulario asesorías</p>
+    </div>
+    <div class="topbar-r">
+      <div class="period-badge">📅 1–23 mar 2026</div>
+    </div>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-g">
+    <div class="kpi kc-coral">
+      <div class="kpi-ico">💸</div>
+      <div class="kpi-lbl">Gasto Total</div>
+      <div class="kpi-val sm">€2.112,45</div>
+      <div class="kpi-d">23 días activos</div>
+    </div>
+    <div class="kpi kc-blue">
+      <div class="kpi-ico">📋</div>
+      <div class="kpi-lbl">Leads</div>
+      <div class="kpi-val">201</div>
+      <div class="kpi-d">formularios enviados</div>
+    </div>
+    <div class="kpi kc-warn">
+      <div class="kpi-ico">🏷️</div>
+      <div class="kpi-lbl">CPL Medio</div>
+      <div class="kpi-val sm">€10,51</div>
+      <div class="kpi-d">coste por lead</div>
+    </div>
+    <div class="kpi kc-ok">
+      <div class="kpi-ico">📞</div>
+      <div class="kpi-lbl">Agendas</div>
+      <div class="kpi-val">31</div>
+      <div class="kpi-d">llamadas confirmadas GHL</div>
+    </div>
+    <div class="kpi kc-purple">
+      <div class="kpi-ico">🎯</div>
+      <div class="kpi-lbl">€ / Agenda</div>
+      <div class="kpi-val sm">€68,14</div>
+      <div class="kpi-d">media ponderada</div>
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div class="cc">
+    <h3>€/Agenda por anuncio <small>solo anuncios con agendas confirmadas · orden ascendente</small></h3>
+    <div class="cw" style="height:280px">
+      <canvas id="chartAds"></canvas>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="filter-row">
+    <div class="pill-group">
+      <button class="pill on" onclick="setFilter('all',this)">Todos</button>
+      <button class="pill" onclick="setFilter('con',this)">Con agendas</button>
+      <button class="pill" onclick="setFilter('sin',this)">Sin agendas</button>
+    </div>
+    <div class="sep"></div>
+    <label>Ordenar:</label>
+    <select class="sort-sel" onchange="setSort(this.value)">
+      <option value="agenda_asc">€/Agenda ↑</option>
+      <option value="gasto_desc">Gasto ↓</option>
+      <option value="leads_desc">Leads ↓</option>
+      <option value="cpl_asc">CPL ↑</option>
+      <option value="agendas_desc">Agendas ↓</option>
+    </select>
+  </div>
+
+  <div class="note">
+    ℹ️ Agendas atribuidas desde Go High Level cruzando UTM de cada lead con el nombre del anuncio.
+    "7 mujeres" y "si no entrenas fuerza" tienen múltiples adsets con el mismo creativo — gasto y leads están agregados.
+  </div>
+
+  <!-- TABLE -->
+  <div class="tbl-card">
+    <h3>Tabla de anuncios <small id="tbl-count"></small></h3>
+    <div class="tbl-wrap">
+      <table id="adsTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Anuncio</th>
+            <th class="r">Gasto</th>
+            <th class="r">Leads</th>
+            <th class="r">CPL</th>
+            <th class="r">Agendas</th>
+            <th class="r">€/Agenda</th>
+          </tr>
+        </thead>
+        <tbody id="adsTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+const RAW = [
+  {name:"7 HOMBRES +30 AÑOS",     gasto:11.55,  leads:1,  agendas:1},
+  {name:"busco 5 dejar arrastrarse", gasto:19.01, leads:4,  agendas:1},
+  {name:"testimonio aitor",         gasto:24.75,  leads:4,  agendas:1},
+  {name:"7 mujeres +30 años (×2)",  gasto:251.89, leads:32, agendas:9},
+  {name:"busco 5 quieran disfrutar",gasto:76.04,  leads:12, agendas:2},
+  {name:"xim abc cuantificación",   gasto:104.46, leads:9,  agendas:2},
+  {name:"bernat sufrir subidas",    gasto:210.08, leads:23, agendas:4},
+  {name:"dejar excusas y empezar",  gasto:57.55,  leads:3,  agendas:1},
+  {name:"busco 5",                  gasto:198.28, leads:15, agendas:3},
+  {name:"si no entrenas (×3)",      gasto:504.18, leads:43, agendas:6},
+  {name:"testimonio jon + eva",     gasto:166.20, leads:12, agendas:1},
+  {name:"abro 5 plazas",            gasto:149.05, leads:13, agendas:0},
+  {name:"Km 35 formato dibujo",     gasto:88.76,  leads:11, agendas:0},
+  {name:"Eres corredor o trail?",   gasto:78.54,  leads:5,  agendas:0},
+  {name:"Vall de Aran",             gasto:39.70,  leads:1,  agendas:0},
+  {name:"5 corredores sufrir",      gasto:33.06,  leads:3,  agendas:0},
+  {name:"10 corredores próx. carrera", gasto:30.28, leads:1, agendas:0},
+  {name:"Xim cansado",              gasto:22.26,  leads:2,  agendas:0},
+  {name:"km 35 estática Real",      gasto:19.08,  leads:4,  agendas:0},
+  {name:"Trailrunner subida dura",  gasto:12.27,  leads:2,  agendas:0},
+  {name:"10 corredores - Copy",     gasto:9.33,   leads:1,  agendas:0},
+  {name:"corredor sin saber gym",   gasto:3.20,   leads:0,  agendas:0},
+  {name:"cansado hacerlo bien",     gasto:1.08,   leads:0,  agendas:0},
+  {name:"plazas exclusivas (×2)",   gasto:1.02,   leads:0,  agendas:0},
+  {name:"corredor tiempo sin mejorar", gasto:0.83, leads:0, agendas:0},
+];
+
+// Computed fields
+RAW.forEach(d => {
+  d.cpl = d.leads > 0 ? d.gasto / d.leads : null;
+  d.cpAgenda = d.agendas > 0 ? d.gasto / d.agendas : null;
+});
+
+let currentFilter = 'all';
+let currentSort = 'agenda_asc';
+
+function fmt(v, decimals=2, prefix='€') {
+  if (v == null) return '—';
+  return prefix + v.toFixed(decimals).replace('.',',');
+}
+
+function costClass(v) {
+  if (v == null) return 'cost-none';
+  if (v < 40) return 'cost-ok';
+  if (v < 80) return 'cost-mid';
+  return 'cost-hi';
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('on'));
+  btn.classList.add('on');
+  render();
+}
+
+function setSort(s) {
+  currentSort = s;
+  render();
+}
+
+function getFiltered() {
+  let data = [...RAW];
+  if (currentFilter === 'con') data = data.filter(d => d.agendas > 0);
+  if (currentFilter === 'sin') data = data.filter(d => d.agendas === 0);
+  return data;
+}
+
+function getSorted(data) {
+  const s = currentSort;
+  return data.sort((a,b) => {
+    if (s === 'agenda_asc') {
+      if (a.cpAgenda == null && b.cpAgenda == null) return b.gasto - a.gasto;
+      if (a.cpAgenda == null) return 1;
+      if (b.cpAgenda == null) return -1;
+      return a.cpAgenda - b.cpAgenda;
+    }
+    if (s === 'gasto_desc') return b.gasto - a.gasto;
+    if (s === 'leads_desc') return b.leads - a.leads;
+    if (s === 'cpl_asc') {
+      if (a.cpl == null && b.cpl == null) return 0;
+      if (a.cpl == null) return 1;
+      if (b.cpl == null) return -1;
+      return a.cpl - b.cpl;
+    }
+    if (s === 'agendas_desc') return b.agendas - a.agendas;
+    return 0;
+  });
+}
+
+function render() {
+  const data = getSorted(getFiltered());
+  const tbody = document.getElementById('adsTbody');
+  document.getElementById('tbl-count').textContent = data.length + ' anuncios';
+
+  tbody.innerHTML = data.map((d, i) => `
+    <tr>
+      <td style="color:var(--muted);font-size:11px">${i+1}</td>
+      <td class="ad-name">
+        ${d.agendas > 0 ? '<span class="badge b-ok" style="margin-right:6px">✓ '+d.agendas+'</span>' : ''}
+        ${d.name}
+      </td>
+      <td class="r" style="font-weight:600">${fmt(d.gasto)}</td>
+      <td class="r">${d.leads > 0 ? d.leads : '<span style="color:var(--muted)">0</span>'}</td>
+      <td class="r">${fmt(d.cpl)}</td>
+      <td class="r">
+        ${d.agendas > 0
+          ? '<span class="badge b-ok">'+d.agendas+'</span>'
+          : '<span style="color:var(--muted)">—</span>'}
+      </td>
+      <td class="r ${costClass(d.cpAgenda)}">${fmt(d.cpAgenda)}</td>
+    </tr>
+  `).join('');
+}
+
+// Initial render
+render();
+
+// CHART — only ads with agendas, sorted by cpAgenda asc
+const conAgendas = RAW.filter(d => d.agendas > 0).sort((a,b) => a.cpAgenda - b.cpAgenda);
+const chartColors = conAgendas.map(d => {
+  if (d.cpAgenda < 40) return 'rgba(22,163,74,.75)';
+  if (d.cpAgenda < 80) return 'rgba(217,119,6,.75)';
+  return 'rgba(220,38,38,.75)';
+});
+
+new Chart(document.getElementById('chartAds'), {
+  type: 'bar',
+  data: {
+    labels: conAgendas.map(d => d.name),
+    datasets: [{
+      label: '€/Agenda',
+      data: conAgendas.map(d => d.cpAgenda),
+      backgroundColor: chartColors,
+      borderRadius: 6,
+      barThickness: 22,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => ' €' + ctx.raw.toFixed(2).replace('.',',') + '/agenda',
+          afterLabel: ctx => {
+            const d = conAgendas[ctx.dataIndex];
+            return `  Gasto: €${d.gasto.toFixed(2).replace('.',',')} · Agendas: ${d.agendas}`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: 'rgba(0,0,0,.05)' },
+        ticks: { callback: v => '€'+v, font: { size: 11 } }
+      },
+      y: {
+        grid: { display: false },
+        ticks: { font: { size: 11 } }
+      }
+    }
+  }
+});
+</script>
+</body>
+</html>
