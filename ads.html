@@ -3,16 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meta Ads Dashboard</title>
+    <title>Meta Ads Dashboard - Estrategas</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
         :root {
             --bg: #FFF5F2;
             --surface: #FFFFFF;
-            --border: #FFD8CE;
+            --surface-light: #FFF0EC;
             --coral: #FF6248;
+            --coralH: #E8503A;
+            --blue: #1877F2;
+            --warn: #D97706;
+            --green: #16A34A;
+            --purple: #7C3AED;
             --text: #1C1410;
+            --textM: #4A3B35;
             --muted: #9C8A84;
+            --border: #FFD8CE;
+            --borderL: #FFE8E2;
+            --coralS: rgba(255,98,72,.1);
+            --okS: rgba(22,163,74,.1);
+            --warnS: rgba(217,119,6,.1);
+            --blueS: rgba(24,119,242,.1);
+            --purpleS: rgba(124,58,237,.1);
+            --errS: rgba(220,38,38,.1);
         }
 
         * {
@@ -22,17 +36,28 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background-color: var(--bg);
             color: var(--text);
+            line-height: 1.6;
         }
 
+        body.locked {
+            overflow: hidden;
+        }
+
+        /* LOCK SCREEN */
         .lock-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--bg) 0%, #FFE5D9 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, var(--bg) 0%, #FFE5D9 100%);
+            z-index: 9999;
         }
 
         .lock-screen.hidden {
@@ -40,79 +65,76 @@
         }
 
         .lock-container {
-            background: var(--surface);
-            border-radius: 12px;
+            background: var(--surface-light);
             padding: 40px;
-            box-shadow: 0 10px 40px rgba(255, 98, 72, 0.1);
-            max-width: 400px;
-            width: 90%;
-        }
-
-        .lock-header {
+            border-radius: 12px;
+            border: 1px solid var(--border);
             text-align: center;
-            margin-bottom: 30px;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
 
         .lock-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
+            font-size: 64px;
+            margin-bottom: 20px;
         }
 
-        .lock-header h1 {
+        .lock-container h1 {
             font-size: 24px;
+            margin-bottom: 10px;
             color: var(--text);
-            margin-bottom: 8px;
         }
 
-        .lock-header p {
+        .lock-container p {
             color: var(--muted);
+            margin-bottom: 30px;
             font-size: 14px;
         }
 
-        .lock-input {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 16px;
-            margin-bottom: 20px;
-            background: var(--bg);
-            color: var(--text);
-        }
-
-        .lock-input:focus {
-            outline: none;
-            border-color: var(--coral);
-            box-shadow: 0 0 0 3px rgba(255, 98, 72, 0.1);
-        }
-
-        .lock-button {
+        .lock-container input {
             width: 100%;
             padding: 12px;
-            background: var(--coral);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 16px;
+        }
+
+        .lock-container input:focus {
+            outline: none;
+            border-color: var(--blue);
+            box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
+        }
+
+        .lock-container button {
+            width: 100%;
+            padding: 12px;
+            background: var(--blue);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.3s;
         }
 
-        .lock-button:hover {
-            background: #E74A38;
+        .lock-container button:hover {
+            background: var(--coralH);
         }
 
         .lock-error {
             color: var(--coral);
             font-size: 14px;
-            margin-top: 10px;
-            text-align: center;
+            margin-bottom: 15px;
             display: none;
         }
 
-        .lock-error.show {
-            display: block;
+        /* LAYOUT */
+        .hidden {
+            display: none !important;
         }
 
         .dashboard {
@@ -120,372 +142,457 @@
             min-height: 100vh;
         }
 
-        .dashboard.hidden {
-            display: none;
-        }
-
+        /* SIDEBAR */
         .sidebar {
-            width: 260px;
+            width: 250px;
             background: var(--surface);
             border-right: 1px solid var(--border);
-            padding: 30px 20px;
-            display: flex;
-            flex-direction: column;
+            padding: 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
         }
 
         .logo {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--coral);
+            display: flex;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 40px;
-            letter-spacing: -0.5px;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--coral);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .logo-text h2 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .logo-text p {
+            font-size: 12px;
+            color: var(--muted);
         }
 
         .nav-links {
             list-style: none;
-            flex: 1;
         }
 
         .nav-links li {
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .nav-links a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
             color: var(--muted);
             text-decoration: none;
-            font-size: 14px;
-            display: block;
-            padding: 10px 12px;
             border-radius: 6px;
-            transition: all 0.2s;
+            transition: all 0.3s;
+            font-size: 14px;
         }
 
         .nav-links a:hover {
-            background: var(--bg);
-            color: var(--coral);
+            background: var(--surface-light);
+            color: var(--text);
         }
 
         .nav-links a.active {
-            background: var(--bg);
-            color: var(--coral);
-            font-weight: 600;
+            background: var(--coral);
+            color: white;
         }
 
+        /* MAIN CONTENT */
         .main-content {
+            margin-left: 250px;
             flex: 1;
-            overflow-y: auto;
+            padding: 20px;
         }
 
-        .top-bar {
+        /* TOPBAR */
+        .topbar {
             background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            padding: 24px 32px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .top-bar-left {
+        .campaign-info {
             display: flex;
-            align-items: center;
-            gap: 20px;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        .top-bar-left h2 {
-            font-size: 20px;
+        .campaign-title {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .campaign-title strong {
             color: var(--text);
         }
 
         .period-pill {
-            background: var(--bg);
-            color: var(--text);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            border: 1px solid var(--border);
-            cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
-        }
-
-        .period-picker {
-            position: relative;
-            display: inline-block;
-        }
-
-        .period-picker input {
-            display: none;
-        }
-
-        .period-inputs {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            z-index: 100;
-            white-space: nowrap;
-        }
-
-        .period-picker.open .period-inputs {
-            display: block;
-        }
-
-        .period-input-row {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-            align-items: center;
-        }
-
-        .period-input-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .period-input-row input {
-            padding: 6px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-size: 12px;
-        }
-
-        .period-input-row button {
+            gap: 6px;
+            background: var(--surface-light);
             padding: 6px 12px;
-            background: var(--coral);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            border-radius: 20px;
             font-size: 12px;
-        }
-
-        .dashboard-header {
-            padding: 32px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .dashboard-actions {
-            display: flex;
-            gap: 12px;
-        }
-
-        .btn {
-            padding: 10px 16px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-primary {
-            background: var(--coral);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #E74A38;
-        }
-
-        .btn-secondary {
-            background: var(--bg);
             color: var(--text);
-            border: 1px solid var(--border);
+            width: fit-content;
         }
 
-        .btn-secondary:hover {
-            background: #FFE5D9;
-        }
-
-        .kpi-row {
+        /* KPI CARDS */
+        .kpi-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 16px;
-            padding: 0 32px 24px 32px;
+            margin-bottom: 30px;
         }
 
         .kpi-card {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .kpi-card.coral::before { background: var(--coral); }
+        .kpi-card.blue::before { background: var(--blue); }
+        .kpi-card.warn::before { background: var(--warn); }
+        .kpi-card.green::before { background: var(--green); }
+        .kpi-card.purple::before { background: var(--purple); }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .kpi-icon {
+            font-size: 24px;
         }
 
         .kpi-label {
-            color: var(--muted);
             font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            color: var(--muted);
             margin-bottom: 8px;
         }
 
         .kpi-value {
             font-size: 28px;
-            font-weight: 700;
+            font-weight: 600;
             color: var(--text);
         }
 
-        .filters-section {
-            padding: 0 32px 24px 32px;
+        .kpi-desc {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 10px;
+        }
+
+        /* ACTION BUTTONS */
+        .actions-bar {
             display: flex;
-            gap: 12px;
+            gap: 10px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
         }
 
+        .btn {
+            padding: 10px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--coralH);
+        }
+
+        .btn-secondary {
+            background: var(--surface-light);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-sm {
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px 8px;
+            transition: color 0.3s;
+        }
+
+        .btn-icon:hover {
+            color: var(--text);
+        }
+
+        .btn-icon.delete:hover {
+            color: var(--coral);
+        }
+
+        /* FILTERS & SORTING */
+        .filters-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group, .sort-group {
+            margin-bottom: 12px;
+        }
+
+        .filter-group:last-child, .sort-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .group-label {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .pill-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pill {
+            padding: 8px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--muted);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pill:hover {
+            border-color: var(--text);
+            color: var(--text);
+        }
+
+        .pill.active {
+            background: var(--blue);
+            border-color: var(--blue);
+            color: white;
+        }
+
+        /* TABLE */
         .table-container {
-            padding: 0 32px 32px 32px;
-            overflow-x: auto;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .table-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            background: var(--surface);
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-        }
-
-        thead {
-            background: var(--bg);
-            border-bottom: 1px solid var(--border);
+            font-size: 13px;
         }
 
         th {
-            padding: 16px;
+            background: var(--surface-light);
+            padding: 12px 16px;
             text-align: left;
-            font-size: 12px;
-            font-weight: 700;
             color: var(--muted);
+            font-weight: 600;
+            font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            user-select: none;
         }
 
-        td {
-            padding: 16px;
-            border-bottom: 1px solid var(--border);
-            font-size: 14px;
+        th:hover {
             color: var(--text);
         }
 
-        tbody tr:last-child td {
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tr:last-child td {
             border-bottom: none;
         }
 
-        tbody tr:hover {
-            background: var(--bg);
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
         }
 
+        .cost-green { color: var(--green); font-weight: 600; }
+        .cost-yellow { color: var(--warn); font-weight: 600; }
+        .cost-red { color: var(--coral); font-weight: 600; }
+        .cost-dash { color: var(--muted); }
+
         .badge {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(81, 207, 102, 0.15);
+            color: var(--green);
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 12px;
-            font-weight: 600;
-            background: #E8F5E9;
-            color: #2E7D32;
-        }
-
-        .badge.zero {
-            background: #F3E5F5;
-            color: #6A1B9A;
-        }
-
-        .cpa-value {
-            color: var(--coral);
-            font-weight: 600;
-        }
-
-        .cpa-null {
-            color: var(--muted);
+            font-weight: 500;
         }
 
         .actions-cell {
             display: flex;
             gap: 8px;
+            align-items: center;
         }
 
-        .icon-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            padding: 4px;
-            transition: opacity 0.2s;
+        /* CHART */
+        .chart-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 14px;
+            color: var(--text);
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        #adsChart {
+            max-height: 400px;
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
             color: var(--muted);
         }
 
-        .icon-btn:hover {
-            color: var(--coral);
-            opacity: 1;
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
         }
 
-        .icon-btn.delete:hover {
-            color: #D32F2F;
-        }
+        .legend-green { background: var(--green); }
+        .legend-yellow { background: var(--warn); }
+        .legend-red { background: var(--coral); }
 
-        .chart-container {
-            padding: 32px;
-            background: var(--surface);
-            border-radius: 12px;
-            margin: 0 32px 32px 32px;
-            border: 1px solid var(--border);
-        }
-
-        .chart-container h3 {
-            margin-bottom: 20px;
-            color: var(--text);
-            font-size: 16px;
-        }
-
+        /* MODAL */
         .modal-overlay {
-            display: none;
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.3);
-            z-index: 1000;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 200;
         }
 
-        .modal-overlay.active {
-            display: flex;
+        .modal-overlay.hidden {
+            display: none;
         }
 
         .modal {
             background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 12px;
             padding: 32px;
             max-width: 500px;
             width: 90%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
         }
 
-        .modal-header {
-            margin-bottom: 24px;
-        }
-
-        .modal-header h3 {
+        .modal h2 {
             font-size: 20px;
+            margin-bottom: 24px;
             color: var(--text);
-            margin-bottom: 8px;
-        }
-
-        .modal-header p {
-            color: var(--muted);
-            font-size: 14px;
         }
 
         .form-group {
@@ -494,28 +601,28 @@
 
         .form-group label {
             display: block;
-            color: var(--text);
-            font-size: 14px;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
             font-weight: 600;
-            margin-bottom: 8px;
         }
 
-        .form-group input,
-        .form-group textarea {
+        .form-group input, .form-group textarea {
             width: 100%;
-            padding: 12px;
+            padding: 10px 12px;
+            background: var(--bg);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: 6px;
             color: var(--text);
+            font-size: 14px;
             font-family: inherit;
         }
 
-        .form-group input:focus,
-        .form-group textarea:focus {
+        .form-group input:focus, .form-group textarea:focus {
             outline: none;
-            border-color: var(--coral);
-            box-shadow: 0 0 0 3px rgba(255, 98, 72, 0.1);
+            border-color: var(--blue);
+            box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
         }
 
         .form-row {
@@ -524,209 +631,261 @@
             gap: 16px;
         }
 
-        .form-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 32px;
+        .calc-display {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 6px;
+            font-family: 'Monaco', monospace;
         }
 
-        .form-actions button {
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 28px;
+        }
+
+        .modal-buttons button {
             flex: 1;
             padding: 12px;
+            border-radius: 6px;
             border: none;
-            border-radius: 8px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s;
         }
 
-        .form-actions .btn-primary {
-            background: var(--coral);
+        .modal-buttons .btn-primary {
+            background: var(--blue);
             color: white;
         }
 
-        .form-actions .btn-primary:hover {
-            background: #E74A38;
+        .modal-buttons .btn-primary:hover {
+            background: var(--coralH);
         }
 
-        .form-actions .btn-secondary {
-            background: var(--bg);
+        .modal-buttons .btn-secondary {
+            background: var(--surface-light);
             color: var(--text);
             border: 1px solid var(--border);
         }
 
-        .form-actions .btn-secondary:hover {
-            background: #FFE5D9;
+        .modal-buttons .btn-secondary:hover {
+            background: var(--border);
         }
 
-        .calculated-info {
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            color: var(--muted);
+        /* FILE INPUT */
+        #csvFileInput {
+            display: none;
         }
 
-        .calculated-info strong {
-            color: var(--text);
-        }
-
-        @media (max-width: 1024px) {
-            .kpi-row {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            }
-        }
-
-        @media (max-width: 768px) {
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
             .sidebar {
-                width: 200px;
-                padding: 20px 12px;
+                width: 80px;
             }
 
-            .top-bar {
-                flex-direction: column;
-                gap: 16px;
-                align-items: flex-start;
+            .sidebar .logo-text {
+                display: none;
             }
 
-            .dashboard-header {
-                flex-direction: column;
-                gap: 16px;
-                align-items: flex-start;
+            .main-content {
+                margin-left: 80px;
             }
 
-            .kpi-row {
-                padding-left: 16px;
-                padding-right: 16px;
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+                z-index: 150;
+                width: 250px;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .kpi-grid {
                 grid-template-columns: 1fr;
             }
 
-            .filters-section {
-                padding-left: 16px;
-                padding-right: 16px;
+            .pill-buttons {
+                flex-direction: column;
             }
 
-            .table-container {
-                padding-left: 16px;
-                padding-right: 16px;
+            .pill {
+                width: 100%;
             }
 
-            .chart-container {
-                margin-left: 16px;
-                margin-right: 16px;
-                margin-bottom: 16px;
+            table {
+                font-size: 11px;
             }
 
-            .modal {
-                width: 95%;
+            th, td {
+                padding: 8px 12px;
             }
         }
     </style>
 </head>
-<body>
+<body class="locked">
     <!-- LOCK SCREEN -->
     <div class="lock-screen" id="lockScreen">
         <div class="lock-container">
-            <div class="lock-header">
-                <div class="lock-icon">🔐</div>
-                <h1>Acceso Restringido</h1>
-                <p>Ingresa tu contraseña para continuar</p>
-            </div>
-            <input type="password" class="lock-input" id="passwordInput" placeholder="Contraseña" />
-            <button class="lock-button" onclick="checkPassword()">Acceder</button>
+            <div class="lock-icon">🔒</div>
+            <h1>Acceso Privado</h1>
+            <p>Ingresa tu contraseña para continuar</p>
             <div class="lock-error" id="lockError">Contraseña incorrecta</div>
+            <input type="password" id="passwordInput" placeholder="Contraseña" />
+            <button onclick="checkPassword()">Acceder</button>
         </div>
     </div>
 
     <!-- DASHBOARD -->
-    <div class="dashboard" id="dashboard">
+    <div class="dashboard">
         <!-- SIDEBAR -->
         <aside class="sidebar">
-            <div class="logo">Estrategas</div>
-            <nav>
-                <ul class="nav-links">
-                    <li><a href="#marketing">Marketing</a></li>
-                    <li><a href="#clientes">Clientes</a></li>
-                    <li><a href="#metaads" class="active">Meta Ads</a></li>
-                </ul>
-            </nav>
+            <a href="#" class="logo">
+                <div class="logo-icon">E</div>
+                <div class="logo-text">
+                    <h2>Estrategas</h2>
+                    <p>Control de Negocio</p>
+                </div>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">📲 Marketing</a></li>
+                <li><a href="clientes.html">🏋️ Clientes</a></li>
+                <li><a href="ads.html" class="active">📣 Meta Ads</a></li>
+            </ul>
         </aside>
 
         <!-- MAIN CONTENT -->
-        <div class="main-content">
-            <!-- TOP BAR -->
-            <div class="top-bar">
-                <div class="top-bar-left">
-                    <h2>Meta Ads — Rendimiento por Anuncio</h2>
-                    <div class="period-picker" id="periodPicker">
-                        <div class="period-pill">📅 <span id="periodDisplay">Últimos 30 días</span></div>
-                        <div class="period-inputs">
-                            <div class="period-input-row">
-                                <label>Desde:</label>
-                                <input type="date" id="dateFrom">
-                            </div>
-                            <div class="period-input-row">
-                                <label>Hasta:</label>
-                                <input type="date" id="dateTo">
-                            </div>
-                            <div class="period-input-row">
-                                <button onclick="applyDateFilter()">Aplicar</button>
-                            </div>
-                        </div>
+        <main class="main-content">
+            <!-- TOPBAR -->
+            <div class="topbar">
+                <div class="campaign-info">
+                    <div class="campaign-title">
+                        Campaña <strong>[TT-TF] Formulario asesorías · Vol ETR (correcta)</strong>
                     </div>
-                </div>
-            </div>
-
-            <!-- DASHBOARD HEADER WITH ACTIONS -->
-            <div class="dashboard-header">
-                <div></div>
-                <div class="dashboard-actions">
-                    <button class="btn btn-secondary" onclick="exportCSV()">📥 Exportar CSV</button>
-                    <button class="btn btn-secondary" onclick="document.getElementById('csvImport').click()">📤 Importar CSV</button>
-                    <input type="file" id="csvImport" accept=".csv" onchange="importCSV(event)" style="display: none;">
-                    <button class="btn btn-primary" onclick="openAddModal()">+ Añadir Anuncio</button>
+                    <div class="period-pill">📅 1–23 mar 2026</div>
                 </div>
             </div>
 
             <!-- KPI CARDS -->
-            <div class="kpi-row">
-                <div class="kpi-card">
-                    <div class="kpi-label">Gasto Total</div>
-                    <div class="kpi-value" id="kpiGasto">€0.00</div>
+            <div class="kpi-grid">
+                <div class="kpi-card coral">
+                    <div class="kpi-header">
+                        <div>
+                            <div class="kpi-label">Gasto Total</div>
+                            <div class="kpi-value" id="kpiGasto">€0,00</div>
+                        </div>
+                        <div class="kpi-icon">💸</div>
+                    </div>
+                    <div class="kpi-desc">acumulados</div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">Leads Totales</div>
-                    <div class="kpi-value" id="kpiLeads">0</div>
+
+                <div class="kpi-card blue">
+                    <div class="kpi-header">
+                        <div>
+                            <div class="kpi-label">Leads Totales</div>
+                            <div class="kpi-value" id="kpiLeads">0</div>
+                        </div>
+                        <div class="kpi-icon">🎯</div>
+                    </div>
+                    <div class="kpi-desc">Formularios enviados</div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">CPL Medio</div>
-                    <div class="kpi-value" id="kpiCPL">€0.00</div>
+
+                <div class="kpi-card warn">
+                    <div class="kpi-header">
+                        <div>
+                            <div class="kpi-label">CPL Medio</div>
+                            <div class="kpi-value" id="kpiCPL">€0,00</div>
+                        </div>
+                        <div class="kpi-icon">📊</div>
+                    </div>
+                    <div class="kpi-desc">Coste por lead</div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">Agendas</div>
-                    <div class="kpi-value" id="kpiAgendas">0</div>
+
+                <div class="kpi-card green">
+                    <div class="kpi-header">
+                        <div>
+                            <div class="kpi-label">Agendas</div>
+                            <div class="kpi-value" id="kpiAgendas">0</div>
+                        </div>
+                        <div class="kpi-icon">📅</div>
+                    </div>
+                    <div class="kpi-desc">Confirmadas en GHL</div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">€/Agenda Media</div>
-                    <div class="kpi-value" id="kpiCPA">€0.00</div>
+
+                <div class="kpi-card purple">
+                    <div class="kpi-header">
+                        <div>
+                            <div class="kpi-label">€/Agenda Media</div>
+                            <div class="kpi-value" id="kpiCPA">€0,00</div>
+                        </div>
+                        <div class="kpi-icon">💰</div>
+                    </div>
+                    <div class="kpi-desc">Coste por cita</div>
+                </div>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="actions-bar">
+                <button class="btn btn-primary" onclick="openAddModal()">➕ Añadir Anuncio</button>
+                <button class="btn btn-secondary" onclick="exportCSV()">📥 Exportar CSV</button>
+                <button class="btn btn-secondary" onclick="importCSV()">📤 Importar CSV</button>
+            </div>
+
+            <!-- FILTERS & SORTING -->
+            <div class="filters-section">
+                <div class="filter-group">
+                    <div class="group-label">Mostrar</div>
+                    <div class="pill-buttons">
+                        <button class="pill active" onclick="setFilter('all')">Todos</button>
+                        <button class="pill" onclick="setFilter('with-agendas')">Con agendas ✅</button>
+                        <button class="pill" onclick="setFilter('without-agendas')">Sin agendas</button>
+                    </div>
+                </div>
+
+                <div class="sort-group">
+                    <div class="group-label">Ordenar</div>
+                    <div class="pill-buttons">
+                        <button class="pill" onclick="setSortBy('gasto', 'desc')">Gasto ↓</button>
+                        <button class="pill" onclick="setSortBy('leads', 'desc')">Leads ↓</button>
+                        <button class="pill" onclick="setSortBy('cpl', 'asc')">CPL ↑</button>
+                        <button class="pill" onclick="setSortBy('agendas', 'desc')">Agendas ↓</button>
+                        <button class="pill" onclick="setSortBy('cpa', 'asc')">€/Agenda ↑</button>
+                    </div>
                 </div>
             </div>
 
             <!-- TABLE -->
             <div class="table-container">
+                <div class="table-header">
+                    <span id="tableCount">0 anuncios</span>
+                </div>
                 <table>
                     <thead>
                         <tr>
-                            <th>ANUNCIO</th>
-                            <th>GASTO €</th>
-                            <th>LEADS</th>
-                            <th>CPL €</th>
-                            <th>AGENDAS</th>
-                            <th>€/AGENDA</th>
-                            <th style="width: 80px;">ACCIONES</th>
+                            <th>Nombre</th>
+                            <th>Gasto €</th>
+                            <th>Leads</th>
+                            <th>CPL</th>
+                            <th>Agendas</th>
+                            <th>€/Agenda</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
@@ -736,54 +895,76 @@
 
             <!-- CHART -->
             <div class="chart-container">
-                <h3>€/Agenda por Anuncio</h3>
-                <canvas id="cpaChart"></canvas>
+                <div class="chart-title">Costo por Agenda (CPA) - Anuncios con Agendas</div>
+                <canvas id="adsChart"></canvas>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <div class="legend-color legend-green"></div>
+                        <span>&lt;€40 (óptimo)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-yellow"></div>
+                        <span>€40–€80 (aceptable)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-red"></div>
+                        <span>&gt;€80 (alto)</span>
+                    </div>
+                </div>
             </div>
-        </div>
+        </main>
     </div>
 
-    <!-- MODAL FOR ADD/EDIT -->
+    <!-- MODAL -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal">
-            <div class="modal-header">
-                <h3 id="modalTitle">Añadir Anuncio</h3>
-                <p id="modalDesc">Completa los campos para crear un nuevo anuncio</p>
-            </div>
-            <form onsubmit="saveAd(event)">
+            <h2 id="modalTitle">Añadir Anuncio</h2>
+            <form id="adForm" onsubmit="saveAd(event)">
                 <div class="form-group">
-                    <label>Nombre del Anuncio</label>
-                    <input type="text" id="formNombre" placeholder="Ej: 7 hombres +30 años" required>
+                    <label>Nombre</label>
+                    <input type="text" id="formNombre" required />
                 </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label>Gasto €</label>
-                        <input type="number" id="formGasto" placeholder="0.00" step="0.01" required>
+                        <input type="number" id="formGasto" step="0.01" required />
                     </div>
                     <div class="form-group">
                         <label>Leads</label>
-                        <input type="number" id="formLeads" placeholder="0" min="0" required>
+                        <input type="number" id="formLeads" min="0" integer required />
                     </div>
                 </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Agendas</label>
+                        <input type="number" id="formAgendas" min="0" integer required />
+                    </div>
+                    <div class="form-group">
+                        <label>CPL (Auto)</label>
+                        <div class="calc-display" id="cplDisplay">€0,00</div>
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label>Agendas</label>
-                    <input type="number" id="formAgendas" placeholder="0" min="0" required>
+                    <label>€/Agenda (Auto)</label>
+                    <div class="calc-display" id="cpaDisplay">€0,00</div>
                 </div>
-                <div class="calculated-info">
-                    <div>CPL: <strong id="calcCPL">€—</strong></div>
-                    <div>€/Agenda: <strong id="calcCPA">€—</strong></div>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Guardar</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+
+                <div class="modal-buttons">
+                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn-primary">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script>
-        // CONSTANTS
-        const PASSWORD_HASH = 'e4a114787a29c3be3b795ae110cb790eec0299c6ef259cc03881e8a7ba791d49';
+    <!-- HIDDEN FILE INPUT -->
+    <input type="file" id="csvFileInput" accept=".csv" onchange="handleFileUpload(event)" />
 
+    <script>
+        // ===== DATA & STATE =====
         const DEFAULT_DATA = [
             {nombre:'7 HOMBRES + 30 AÑOS',gasto:11.55,leads:1,cpl:11.55,agendas:1,cpa:11.55},
             {nombre:'busco 5 dejar de arrastrarse',gasto:19.01,leads:4,cpl:4.75,agendas:1,cpa:19.01},
@@ -812,68 +993,50 @@
             {nombre:'corredor cansado de llevar tiempo sin mejorar',gasto:0.83,leads:0,cpl:null,agendas:0,cpa:null}
         ];
 
-        // STATE
         let ads = [];
+        let currentFilter = 'all';
+        let currentSort = { field: null, direction: null };
         let editingIndex = null;
         let chart = null;
 
-        // INITIALIZATION
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('passwordInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') checkPassword();
-            });
+        // PASSWORD HASH
+        const PASSWORD_HASH = 'e4a114787a29c3be3b795ae110cb790eec0299c6ef259cc03881e8a7ba791d49';
 
-            document.getElementById('periodPicker').addEventListener('click', function(e) {
-                if (e.target.closest('.period-pill')) {
-                    this.classList.toggle('open');
-                }
-            });
-
-            document.addEventListener('click', (e) => {
-                const picker = document.getElementById('periodPicker');
-                if (!picker.contains(e.target)) {
-                    picker.classList.remove('open');
-                }
-            });
-
-            document.getElementById('formGasto').addEventListener('input', updateCalculations);
-            document.getElementById('formLeads').addEventListener('input', updateCalculations);
-            document.getElementById('formAgendas').addEventListener('input', updateCalculations);
-
-            loadData();
-        });
-
-        // PASSWORD CHECKING
-        async function checkPassword() {
-            const input = document.getElementById('passwordInput').value;
-            const hash = await sha256(input);
-            const errorEl = document.getElementById('lockError');
-
-            if (hash === PASSWORD_HASH) {
-                document.getElementById('lockScreen').classList.add('hidden');
-                document.getElementById('dashboard').classList.remove('hidden');
-                if (ads.length > 0) {
-                    renderTable();
-                    updateKPIs();
-                    updateChart();
-                }
-            } else {
-                errorEl.classList.add('show');
-                setTimeout(() => {
-                    errorEl.classList.remove('show');
-                    document.getElementById('passwordInput').value = '';
-                }, 2000);
-            }
-        }
-
-        async function sha256(message) {
-            const msgBuffer = new TextEncoder().encode(message);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        // ===== PASSWORD VERIFICATION =====
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        // DATA MANAGEMENT
+        async function checkPassword() {
+            const password = document.getElementById('passwordInput').value;
+            const hash = await hashPassword(password);
+            
+            if (hash === PASSWORD_HASH) {
+                document.body.classList.remove('locked');
+                document.getElementById('lockScreen').classList.add('hidden');
+                initDashboard();
+            } else {
+                document.getElementById('lockError').style.display = 'block';
+                document.getElementById('passwordInput').value = '';
+            }
+        }
+
+        document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkPassword();
+        });
+
+        // ===== INITIALIZATION =====
+        function initDashboard() {
+            loadData();
+            renderTable();
+            updateKPIs();
+            updateChart();
+        }
+
         function loadData() {
             const stored = localStorage.getItem('metaAdsData');
             if (stored) {
@@ -888,142 +1051,234 @@
             localStorage.setItem('metaAdsData', JSON.stringify(ads));
         }
 
+        // ===== FORMATTING =====
+        function formatCurrency(value) {
+            if (value === null || value === undefined) return '—';
+            return new Intl.NumberFormat('es-ES', {
+                style: 'currency',
+                currency: 'EUR',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value);
+        }
+
+        function getCostClass(value) {
+            if (value === null || value === undefined) return 'cost-dash';
+            if (value < 40) return 'cost-green';
+            if (value <= 80) return 'cost-yellow';
+            return 'cost-red';
+        }
+
+        // ===== FILTERING & SORTING =====
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-group .pill').forEach((pill, idx) => {
+                pill.classList.toggle('active', 
+                    (idx === 0 && filter === 'all') ||
+                    (idx === 1 && filter === 'with-agendas') ||
+                    (idx === 2 && filter === 'without-agendas')
+                );
+            });
+            renderTable();
+        }
+
+        function setSortBy(field, direction) {
+            currentSort = { field, direction };
+            document.querySelectorAll('.sort-group .pill').forEach(p => p.classList.remove('active'));
+            event.target.classList.add('active');
+            renderTable();
+        }
+
+        function getFilteredAds() {
+            let result = ads;
+            if (currentFilter === 'with-agendas') {
+                result = result.filter(ad => ad.agendas > 0);
+            } else if (currentFilter === 'without-agendas') {
+                result = result.filter(ad => ad.agendas === 0);
+            }
+
+            if (currentSort.field) {
+                result.sort((a, b) => {
+                    const aVal = a[currentSort.field];
+                    const bVal = b[currentSort.field];
+                    
+                    if (aVal === null || aVal === undefined) return 1;
+                    if (bVal === null || bVal === undefined) return -1;
+                    
+                    const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+                    return currentSort.direction === 'asc' ? comparison : -comparison;
+                });
+            }
+
+            return result;
+        }
+
+        // ===== TABLE RENDERING =====
         function renderTable() {
+            const filtered = getFilteredAds();
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
-            ads.forEach((ad, idx) => {
+            filtered.forEach((ad, idx) => {
+                const originalIdx = ads.indexOf(ad);
                 const row = document.createElement('tr');
-                const cplValue = ad.cpl ? `€${ad.cpl.toFixed(2)}` : '—';
-                const cpaValue = ad.cpa ? `€${ad.cpa.toFixed(2)}` : '—';
-                const agendaBadge = ad.agendas > 0 
-                    ? `<span class="badge">${ad.agendas}</span>` 
-                    : `<span class="badge zero">${ad.agendas}</span>`;
-
                 row.innerHTML = `
-                    <td><strong>${escapeHtml(ad.nombre)}</strong></td>
-                    <td>€${ad.gasto.toFixed(2)}</td>
+                    <td>${ad.nombre}</td>
+                    <td>${formatCurrency(ad.gasto)}</td>
                     <td>${ad.leads}</td>
-                    <td>${cplValue}</td>
-                    <td>${agendaBadge}</td>
-                    <td><span class="cpa-value">${cpaValue}</span></td>
+                    <td class="${getCostClass(ad.cpl)}">${formatCurrency(ad.cpl)}</td>
+                    <td>
+                        ${ad.agendas > 0 ? `<span class="badge">${ad.agendas} ✅</span>` : ad.agendas}
+                    </td>
+                    <td class="${getCostClass(ad.cpa)}">${formatCurrency(ad.cpa)}</td>
                     <td>
                         <div class="actions-cell">
-                            <button class="icon-btn" onclick="openEditModal(${idx})" title="Editar">✏️</button>
-                            <button class="icon-btn delete" onclick="deleteAd(${idx})" title="Eliminar">🗑️</button>
+                            <button class="btn-icon" onclick="openEditModal(${originalIdx})" title="Editar">✏️</button>
+                            <button class="btn-icon delete" onclick="deleteAd(${originalIdx})" title="Eliminar">🗑️</button>
                         </div>
                     </td>
                 `;
                 tbody.appendChild(row);
             });
+
+            document.getElementById('tableCount').textContent = `${filtered.length} anuncio${filtered.length !== 1 ? 's' : ''}`;
+            updateKPIs();
+            updateChart();
         }
 
+        // ===== KPI UPDATES =====
         function updateKPIs() {
-            const totalGasto = ads.reduce((sum, ad) => sum + ad.gasto, 0);
-            const totalLeads = ads.reduce((sum, ad) => sum + ad.leads, 0);
-            const totalAgendas = ads.reduce((sum, ad) => sum + ad.agendas, 0);
-            const cplMedio = totalLeads > 0 ? totalGasto / totalLeads : 0;
-            const cpaMedio = totalAgendas > 0 ? totalGasto / totalAgendas : 0;
+            const filtered = getFilteredAds();
+            
+            const gasto = filtered.reduce((sum, ad) => sum + ad.gasto, 0);
+            const leads = filtered.reduce((sum, ad) => sum + ad.leads, 0);
+            const agendas = filtered.reduce((sum, ad) => sum + ad.agendas, 0);
+            
+            const cpl = leads > 0 ? gasto / leads : 0;
+            const cpa = agendas > 0 ? gasto / agendas : 0;
 
-            document.getElementById('kpiGasto').textContent = `€${totalGasto.toFixed(2)}`;
-            document.getElementById('kpiLeads').textContent = totalLeads;
-            document.getElementById('kpiCPL').textContent = `€${cplMedio.toFixed(2)}`;
-            document.getElementById('kpiAgendas').textContent = totalAgendas;
-            document.getElementById('kpiCPA').textContent = `€${cpaMedio.toFixed(2)}`;
+            document.getElementById('kpiGasto').textContent = formatCurrency(gasto);
+            document.getElementById('kpiLeads').textContent = leads;
+            document.getElementById('kpiCPL').textContent = formatCurrency(cpl);
+            document.getElementById('kpiAgendas').textContent = agendas;
+            document.getElementById('kpiCPA').textContent = formatCurrency(cpa);
         }
 
+        // ===== CHART =====
         function updateChart() {
-            const labels = ads.map(ad => ad.nombre.substring(0, 20));
-            const data = ads.map(ad => ad.cpa || 0);
+            const withAgendas = ads.filter(ad => ad.agendas > 0)
+                .sort((a, b) => (a.cpa || Infinity) - (b.cpa || Infinity));
 
-            if (chart) {
-                chart.data.labels = labels;
-                chart.data.datasets[0].data = data;
-                chart.update();
-            } else {
-                const ctx = document.getElementById('cpaChart').getContext('2d');
-                chart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: '€/Agenda',
-                            data: data,
-                            backgroundColor: '#FF6248',
-                            borderRadius: 6,
-                            borderSkipped: false
-                        }]
-                    },
-                    options: {
-                        indexAxis: 'y',
-                        responsive: true,
-                        maintainAspectRatio: true,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        },
-                        scales: {
-                            x: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return '€' + value.toFixed(2);
-                                    }
+            const labels = withAgendas.map(ad => ad.nombre);
+            const data = withAgendas.map(ad => ad.cpa);
+            const colors = withAgendas.map(ad => {
+                if (ad.cpa < 40) return 'rgba(81, 207, 102, 0.7)';
+                if (ad.cpa <= 80) return 'rgba(255, 169, 77, 0.7)';
+                return 'rgba(255, 107, 107, 0.7)';
+            });
+
+            const ctx = document.getElementById('adsChart').getContext('2d');
+            
+            if (chart) chart.destroy();
+            
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '€/Agenda (CPA)',
+                        data: data,
+                        backgroundColor: colors,
+                        borderColor: colors.map(c => c.replace('0.7', '1')),
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            cornerRadius: 6,
+                            callbacks: {
+                                title: (context) => context[0].label,
+                                label: (context) => {
+                                    const ad = withAgendas[context.dataIndex];
+                                    return [
+                                        `€/Agenda: ${formatCurrency(ad.cpa)}`,
+                                        `Agendas: ${ad.agendas}`,
+                                        `Gasto: ${formatCurrency(ad.gasto)}`,
+                                        `Leads: ${ad.leads}`
+                                    ];
                                 }
                             }
                         }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: 'rgba(255, 255, 255, 0.5)' }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: 'rgba(255, 255, 255, 0.7)', font: { size: 11 } }
+                        }
                     }
-                });
-            }
+                }
+            });
         }
 
-        // MODAL MANAGEMENT
+        // ===== MODAL OPERATIONS =====
         function openAddModal() {
             editingIndex = null;
             document.getElementById('modalTitle').textContent = 'Añadir Anuncio';
-            document.getElementById('modalDesc').textContent = 'Completa los campos para crear un nuevo anuncio';
-            document.getElementById('formNombre').value = '';
-            document.getElementById('formGasto').value = '';
-            document.getElementById('formLeads').value = '';
-            document.getElementById('formAgendas').value = '';
-            updateCalculations();
-            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('adForm').reset();
+            document.getElementById('modalOverlay').classList.remove('hidden');
+            document.getElementById('formNombre').focus();
         }
 
         function openEditModal(idx) {
             editingIndex = idx;
             const ad = ads[idx];
             document.getElementById('modalTitle').textContent = 'Editar Anuncio';
-            document.getElementById('modalDesc').textContent = 'Actualiza la información del anuncio';
             document.getElementById('formNombre').value = ad.nombre;
             document.getElementById('formGasto').value = ad.gasto;
             document.getElementById('formLeads').value = ad.leads;
             document.getElementById('formAgendas').value = ad.agendas;
-            updateCalculations();
-            document.getElementById('modalOverlay').classList.add('active');
+            updateCalcs();
+            document.getElementById('modalOverlay').classList.remove('hidden');
         }
 
         function closeModal() {
-            document.getElementById('modalOverlay').classList.remove('active');
+            document.getElementById('modalOverlay').classList.add('hidden');
+            document.getElementById('adForm').reset();
             editingIndex = null;
         }
 
         document.getElementById('modalOverlay').addEventListener('click', (e) => {
-            if (e.target.id === 'modalOverlay') closeModal();
+            if (e.target === document.getElementById('modalOverlay')) closeModal();
         });
 
-        function updateCalculations() {
+        function updateCalcs() {
             const gasto = parseFloat(document.getElementById('formGasto').value) || 0;
-            const leads = parseFloat(document.getElementById('formLeads').value) || 0;
-            const agendas = parseFloat(document.getElementById('formAgendas').value) || 0;
+            const leads = parseInt(document.getElementById('formLeads').value) || 0;
+            const agendas = parseInt(document.getElementById('formAgendas').value) || 0;
 
-            const cpl = leads > 0 ? gasto / leads : null;
-            const cpa = agendas > 0 ? gasto / agendas : null;
+            const cpl = leads > 0 ? gasto / leads : 0;
+            const cpa = agendas > 0 ? gasto / agendas : 0;
 
-            document.getElementById('calcCPL').textContent = cpl ? `€${cpl.toFixed(2)}` : '€—';
-            document.getElementById('calcCPA').textContent = cpa ? `€${cpa.toFixed(2)}` : '€—';
+            document.getElementById('cplDisplay').textContent = formatCurrency(cpl);
+            document.getElementById('cpaDisplay').textContent = formatCurrency(cpa);
         }
+
+        document.getElementById('formGasto').addEventListener('input', updateCalcs);
+        document.getElementById('formLeads').addEventListener('input', updateCalcs);
+        document.getElementById('formAgendas').addEventListener('input', updateCalcs);
 
         function saveAd(e) {
             e.preventDefault();
@@ -1035,118 +1290,109 @@
             const cpl = leads > 0 ? gasto / leads : null;
             const cpa = agendas > 0 ? gasto / agendas : null;
 
-            const newAd = { nombre, gasto, leads, cpl, agendas, cpa };
+            const ad = { nombre, gasto, leads, cpl, agendas, cpa };
 
             if (editingIndex !== null) {
-                ads[editingIndex] = newAd;
+                ads[editingIndex] = ad;
             } else {
-                ads.push(newAd);
+                ads.push(ad);
             }
 
             saveData();
-            renderTable();
-            updateKPIs();
-            updateChart();
             closeModal();
+            renderTable();
         }
 
         function deleteAd(idx) {
-            if (confirm('¿Estás seguro de que quieres eliminar este anuncio?')) {
+            if (confirm('¿Eliminar este anuncio?')) {
                 ads.splice(idx, 1);
                 saveData();
                 renderTable();
-                updateKPIs();
-                updateChart();
             }
         }
 
-        // EXPORT/IMPORT
+        // ===== CSV OPERATIONS =====
         function exportCSV() {
-            const headers = ['ANUNCIO', 'GASTO €', 'LEADS', 'CPL €', 'AGENDAS', '€/AGENDA'];
+            const headers = ['Nombre', 'Gasto €', 'Leads', 'CPL', 'Agendas', '€/Agenda'];
             const rows = ads.map(ad => [
                 ad.nombre,
-                ad.gasto.toFixed(2),
+                ad.gasto,
                 ad.leads,
-                ad.cpl ? ad.cpl.toFixed(2) : '',
+                ad.cpl !== null ? ad.cpl : '',
                 ad.agendas,
-                ad.cpa ? ad.cpa.toFixed(2) : ''
+                ad.cpa !== null ? ad.cpa : ''
             ]);
 
-            let csv = headers.join(',') + '\n';
-            rows.forEach(row => {
-                csv += row.map(cell => `"${cell}"`).join(',') + '\n';
-            });
+            const csv = [headers, ...rows]
+                .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+                .join('\n');
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', 'meta_ads_export.csv');
+            link.href = URL.createObjectURL(blob);
+            link.download = `ads_${new Date().toISOString().split('T')[0]}.csv`;
             link.click();
         }
 
-        function importCSV(event) {
-            const file = event.target.files[0];
+        function importCSV() {
+            document.getElementById('csvFileInput').click();
+        }
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const csv = e.target.result;
-                    const lines = csv.split('\n').filter(l => l.trim());
-                    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-
-                    const newAds = [];
-                    for (let i = 1; i < lines.length; i++) {
-                        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-                        if (values.length >= 3) {
-                            newAds.push({
-                                nombre: values[0],
-                                gasto: parseFloat(values[1]) || 0,
-                                leads: parseInt(values[2]) || 0,
-                                cpl: values[3] ? parseFloat(values[3]) : null,
-                                agendas: parseInt(values[4]) || 0,
-                                cpa: values[5] ? parseFloat(values[5]) : null
-                            });
-                        }
-                    }
-
-                    if (newAds.length > 0) {
-                        ads = newAds;
-                        saveData();
-                        renderTable();
-                        updateKPIs();
-                        updateChart();
-                        alert('Datos importados correctamente');
-                    }
-                } catch (err) {
-                    alert('Error al importar CSV: ' + err.message);
+            reader.onload = (event) => {
+                const csv = event.target.result;
+                const lines = csv.split('\n').filter(line => line.trim());
+                if (lines.length < 2) {
+                    alert('Archivo CSV inválido');
+                    return;
                 }
+
+                const newAds = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const cols = parseCSVLine(lines[i]);
+                    if (cols.length < 6) continue;
+
+                    const ad = {
+                        nombre: cols[0],
+                        gasto: parseFloat(cols[1]) || 0,
+                        leads: parseInt(cols[2]) || 0,
+                        cpl: cols[3] ? parseFloat(cols[3]) : null,
+                        agendas: parseInt(cols[4]) || 0,
+                        cpa: cols[5] ? parseFloat(cols[5]) : null
+                    };
+                    newAds.push(ad);
+                }
+
+                ads = newAds;
+                saveData();
+                renderTable();
+                document.getElementById('csvFileInput').value = '';
             };
             reader.readAsText(file);
-            document.getElementById('csvImport').value = '';
         }
 
-        function applyDateFilter() {
-            const from = document.getElementById('dateFrom').value;
-            const to = document.getElementById('dateTo').value;
-            
-            if (from && to) {
-                document.getElementById('periodDisplay').textContent = `${from} a ${to}`;
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
             }
-            
-            document.getElementById('periodPicker').classList.remove('open');
-        }
-
-        function escapeHtml(text) {
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-            return text.replace(/[&<>"']/g, m => map[m]);
+            result.push(current.trim());
+            return result;
         }
     </script>
 </body>
