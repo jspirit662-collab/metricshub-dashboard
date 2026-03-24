@@ -1,451 +1,1153 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Meta Ads — Acceso Privado</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body.locked{background:#FFF5F2;font-family:'Inter','Segoe UI',system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center}
-#lock-screen{text-align:center;background:#fff;padding:48px 40px;border-radius:16px;box-shadow:0 4px 24px rgba(28,20,16,.12);border:1.5px solid #FFD8CE;max-width:400px;width:90%}
-#lock-screen .lock-ico{width:64px;height:64px;background:#FF6248;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;margin:0 auto 20px}
-#lock-screen h1{font-size:20px;color:#1C1410;margin-bottom:6px}
-#lock-screen p{font-size:13px;color:#9C8A84;margin-bottom:24px}
-#lock-screen input{width:100%;padding:12px 16px;border:1.5px solid #FFD8CE;border-radius:10px;font-size:14px;font-family:inherit;outline:none;transition:border .2s}
-#lock-screen input:focus{border-color:#FF6248}
-#lock-screen button{width:100%;padding:12px;margin-top:12px;background:#FF6248;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .2s}
-#lock-screen button:hover{background:#E8503A}
-#lock-screen .error{color:#DC2626;font-size:12px;margin-top:10px;display:none}
-#dashboard{display:none}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta Ads Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #FFF5F2;
+            --surface: #FFFFFF;
+            --border: #FFD8CE;
+            --coral: #FF6248;
+            --text: #1C1410;
+            --muted: #9C8A84;
+        }
 
-:root{
-  --bg:#FFF5F2;--surface:#FFFFFF;--surface2:#FFF0EC;--border:#FFD8CE;--borderL:#FFE8E2;
-  --text:#1C1410;--textM:#4A3B35;--muted:#9C8A84;
-  --coral:#FF6248;--coralH:#E8503A;--coralS:rgba(255,98,72,.1);--coralM:rgba(255,98,72,.22);
-  --ok:#16A34A;--okS:rgba(22,163,74,.1);
-  --warn:#D97706;--warnS:rgba(217,119,6,.1);
-  --err:#DC2626;--errS:rgba(220,38,38,.1);
-  --blue:#1877F2;--blueS:rgba(24,119,242,.1);
-  --purple:#7C3AED;--purpleS:rgba(124,58,237,.1);
-  --sh:0 1px 4px rgba(28,20,16,.08);--shM:0 4px 16px rgba(28,20,16,.1);
-  --r:12px;--rs:8px;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',system-ui,sans-serif;min-height:100vh;font-size:14px;line-height:1.5}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-/* SIDEBAR */
-#sb{position:fixed;top:0;left:0;width:226px;height:100vh;background:var(--surface);border-right:1.5px solid var(--border);display:flex;flex-direction:column;z-index:100}
-.sb-logo{padding:18px 18px 14px;border-bottom:1.5px solid var(--borderL);display:flex;align-items:center;gap:10px}
-.sb-ico{width:36px;height:36px;background:var(--coral);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:800;flex-shrink:0}
-.sb-name{font-size:15px;font-weight:700;letter-spacing:-.3px}
-.sb-sub{font-size:10.5px;color:var(--muted);margin-top:1px}
-.sb-grp{padding:12px 10px 4px}
-.sb-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:0 8px;margin-bottom:3px}
-.ni{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border-radius:var(--rs);background:none;border:none;cursor:pointer;color:var(--muted);font-size:13.5px;text-align:left;transition:all .15s;margin-bottom:1px;text-decoration:none}
-.ni:hover{background:var(--surface2);color:var(--textM)}
-.ni.on{background:var(--coralS);color:var(--coral);font-weight:600}
-.ni-ico{font-size:15px;width:20px;text-align:center;flex-shrink:0}
-.sb-foot{margin-top:auto;padding:12px 10px;border-top:1.5px solid var(--borderL)}
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+        }
 
-/* MAIN */
-#main{margin-left:226px;padding:26px 30px;min-height:100vh}
+        .lock-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg) 0%, #FFE5D9 100%);
+        }
 
-/* TOPBAR */
-.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.topbar h1{font-size:20px;font-weight:700}
-.topbar p{font-size:12px;color:var(--muted);margin-top:2px}
-.topbar-r{display:flex;align-items:center;gap:10px}
-.period-pill{background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12.5px;color:var(--textM);display:flex;align-items:center;gap:6px}
-.period-pill span{font-weight:600;color:var(--coral)}
+        .lock-screen.hidden {
+            display: none;
+        }
 
-/* KPI GRID */
-.kpi-g{display:grid;grid-template-columns:repeat(5,1fr);gap:13px;margin-bottom:20px}
-.kpi{background:var(--surface);border:1.5px solid var(--borderL);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);position:relative;overflow:hidden}
-.kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0}
-.kc-coral::after{background:var(--coral)}.kc-ok::after{background:var(--ok)}.kc-warn::after{background:var(--warn)}.kc-blue::after{background:var(--blue)}.kc-purple::after{background:var(--purple)}.kc-err::after{background:var(--err)}
-.kpi-lbl{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px}
-.kpi-val{font-size:24px;font-weight:700;color:var(--text);line-height:1.1}
-.kpi-d{margin-top:5px;font-size:11.5px;color:var(--muted)}
-.kpi-ico{position:absolute;top:14px;right:14px;font-size:20px;opacity:.12}
+        .lock-container {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(255, 98, 72, 0.1);
+            max-width: 400px;
+            width: 90%;
+        }
 
-/* FILTER BAR */
-.filter-section{background:var(--surface);border:1.5px solid var(--borderL);border-radius:var(--r);padding:16px 20px;margin-bottom:18px;box-shadow:var(--sh)}
-.filter-section h3{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px}
-.filter-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-.filter-row:last-child{margin-bottom:0}
-.filter-lbl{font-size:12px;font-weight:600;color:var(--textM);min-width:80px}
-.pill-btn{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--textM);font-size:12.5px;font-weight:500;cursor:pointer;transition:all .15s;font-family:inherit}
-.pill-btn:hover{border-color:var(--coral);color:var(--coral)}
-.pill-btn.active{background:var(--coral);border-color:var(--coral);color:#fff;font-weight:600}
-.sort-btn{padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--textM);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;font-family:inherit;display:flex;align-items:center;gap:4px}
-.sort-btn:hover{border-color:var(--coral);color:var(--coral)}
-.sort-btn.active{background:var(--coralS);border-color:var(--coral);color:var(--coral);font-weight:600}
+        .lock-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-/* CHART CARD */
-.cc{background:var(--surface);border:1.5px solid var(--borderL);border-radius:var(--r);padding:18px 20px;box-shadow:var(--sh);margin-bottom:18px}
-.cc h3{font-size:13px;font-weight:700;color:var(--text);margin-bottom:13px}
-.cc h3 small{color:var(--muted);font-weight:400;font-size:11px;margin-left:5px}
-.cw{position:relative}
-.h320{height:320px}
+        .lock-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
 
-/* TABLE */
-.tbl-wrap{overflow-x:auto;margin-top:8px}
-table{width:100%;border-collapse:collapse;font-size:12.5px}
-th{text-align:left;padding:9px 11px;font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--borderL);cursor:pointer;user-select:none;white-space:nowrap}
-th:hover{color:var(--coral)}
-th.sort-asc::after{content:' ↑';color:var(--coral)}
-th.sort-desc::after{content:' ↓';color:var(--coral)}
-td{padding:10px 11px;border-bottom:1px solid var(--borderL);color:var(--textM)}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:var(--surface2)}
-.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
-.b-ok{background:var(--okS);color:var(--ok)}
-.b-muted{background:rgba(156,138,132,.1);color:var(--muted)}
+        .lock-header h1 {
+            font-size: 24px;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
 
-/* Color condicional €/Agenda */
-.cost-green{color:#16A34A;font-weight:700}
-.cost-yellow{color:#D97706;font-weight:700}
-.cost-red{color:#DC2626;font-weight:700}
-.cost-dash{color:var(--muted)}
+        .lock-header p {
+            color: var(--muted);
+            font-size: 14px;
+        }
 
-/* RESPONSIVE */
-@media(max-width:1100px){
-  .kpi-g{grid-template-columns:repeat(3,1fr)}
-}
-@media(max-width:900px){
-  #sb{width:56px}
-  .sb-name,.sb-sub,.ni span,.sb-lbl{display:none}
-  #main{margin-left:56px;padding:16px}
-  .kpi-g{grid-template-columns:repeat(2,1fr)}
-}
-@media(max-width:600px){
-  .kpi-g{grid-template-columns:1fr 1fr}
-}
+        .lock-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            background: var(--bg);
+            color: var(--text);
+        }
 
-</style>
+        .lock-input:focus {
+            outline: none;
+            border-color: var(--coral);
+            box-shadow: 0 0 0 3px rgba(255, 98, 72, 0.1);
+        }
+
+        .lock-button {
+            width: 100%;
+            padding: 12px;
+            background: var(--coral);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .lock-button:hover {
+            background: #E74A38;
+        }
+
+        .lock-error {
+            color: var(--coral);
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .lock-error.show {
+            display: block;
+        }
+
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .dashboard.hidden {
+            display: none;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--coral);
+            margin-bottom: 40px;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            list-style: none;
+            flex: 1;
+        }
+
+        .nav-links li {
+            margin-bottom: 12px;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 14px;
+            display: block;
+            padding: 10px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover {
+            background: var(--bg);
+            color: var(--coral);
+        }
+
+        .nav-links a.active {
+            background: var(--bg);
+            color: var(--coral);
+            font-weight: 600;
+        }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .top-bar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 24px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .top-bar-left h2 {
+            font-size: 20px;
+            color: var(--text);
+        }
+
+        .period-pill {
+            background: var(--bg);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .period-picker {
+            position: relative;
+            display: inline-block;
+        }
+
+        .period-picker input {
+            display: none;
+        }
+
+        .period-inputs {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            white-space: nowrap;
+        }
+
+        .period-picker.open .period-inputs {
+            display: block;
+        }
+
+        .period-input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .period-input-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .period-input-row input {
+            padding: 6px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .period-input-row button {
+            padding: 6px 12px;
+            background: var(--coral);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .dashboard-header {
+            padding: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dashboard-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--coral);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #E74A38;
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #FFE5D9;
+        }
+
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            padding: 0 32px 24px 32px;
+        }
+
+        .kpi-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .kpi-label {
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .filters-section {
+            padding: 0 32px 24px 32px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .table-container {
+            padding: 0 32px 32px 32px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        thead {
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: var(--bg);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .badge.zero {
+            background: #F3E5F5;
+            color: #6A1B9A;
+        }
+
+        .cpa-value {
+            color: var(--coral);
+            font-weight: 600;
+        }
+
+        .cpa-null {
+            color: var(--muted);
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+            transition: opacity 0.2s;
+            color: var(--muted);
+        }
+
+        .icon-btn:hover {
+            color: var(--coral);
+            opacity: 1;
+        }
+
+        .icon-btn.delete:hover {
+            color: #D32F2F;
+        }
+
+        .chart-container {
+            padding: 32px;
+            background: var(--surface);
+            border-radius: 12px;
+            margin: 0 32px 32px 32px;
+            border: 1px solid var(--border);
+        }
+
+        .chart-container h3 {
+            margin-bottom: 20px;
+            color: var(--text);
+            font-size: 16px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            margin-bottom: 24px;
+        }
+
+        .modal-header h3 {
+            font-size: 20px;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .modal-header p {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text);
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--coral);
+            box-shadow: 0 0 0 3px rgba(255, 98, 72, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        .form-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .form-actions .btn-primary {
+            background: var(--coral);
+            color: white;
+        }
+
+        .form-actions .btn-primary:hover {
+            background: #E74A38;
+        }
+
+        .form-actions .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .form-actions .btn-secondary:hover {
+            background: #FFE5D9;
+        }
+
+        .calculated-info {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .calculated-info strong {
+            color: var(--text);
+        }
+
+        @media (max-width: 1024px) {
+            .kpi-row {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+                padding: 20px 12px;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            .kpi-row {
+                padding-left: 16px;
+                padding-right: 16px;
+                grid-template-columns: 1fr;
+            }
+
+            .filters-section {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+
+            .table-container {
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+
+            .chart-container {
+                margin-left: 16px;
+                margin-right: 16px;
+                margin-bottom: 16px;
+            }
+
+            .modal {
+                width: 95%;
+            }
+        }
+    </style>
 </head>
-<body class="locked">
-<div id="lock-screen">
-<div class="lock-ico">&#128274;</div>
-<h1>Acceso Privado</h1>
-<p>Introduce la contraseña para acceder al dashboard</p>
-<input type="password" id="pwd" placeholder="Contraseña" onkeydown="if(event.key==='Enter')checkPwd()"/>
-<button onclick="checkPwd()">Acceder</button>
-<div class="error" id="err">Contraseña incorrecta</div>
-</div>
-<div id="dashboard">
-
-
-<!-- SIDEBAR -->
-<nav id="sb">
-  <div class="sb-logo">
-    <div class="sb-ico">E</div>
-    <div>
-      <div class="sb-name">Estrategas</div>
-      <div class="sb-sub">Control de Negocio</div>
+<body>
+    <!-- LOCK SCREEN -->
+    <div class="lock-screen" id="lockScreen">
+        <div class="lock-container">
+            <div class="lock-header">
+                <div class="lock-icon">🔐</div>
+                <h1>Acceso Restringido</h1>
+                <p>Ingresa tu contraseña para continuar</p>
+            </div>
+            <input type="password" class="lock-input" id="passwordInput" placeholder="Contraseña" />
+            <button class="lock-button" onclick="checkPassword()">Acceder</button>
+            <div class="lock-error" id="lockError">Contraseña incorrecta</div>
+        </div>
     </div>
-  </div>
-  <div class="sb-grp">
-    <div class="sb-lbl">Paneles</div>
-    <a href="index.html" class="ni" style="text-decoration:none"><span class="ni-ico">📲</span><span>Marketing</span></a>
-    <a href="clientes.html" class="ni" style="text-decoration:none"><span class="ni-ico">🏋️</span><span>Clientes</span></a>
-    <a href="ads.html" class="ni on" style="text-decoration:none"><span class="ni-ico">📣</span><span>Meta Ads</span></a>
-  </div>
-</nav>
 
-<!-- MAIN -->
-<div id="main">
+    <!-- DASHBOARD -->
+    <div class="dashboard" id="dashboard">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="logo">Estrategas</div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#marketing">Marketing</a></li>
+                    <li><a href="#clientes">Clientes</a></li>
+                    <li><a href="#metaads" class="active">Meta Ads</a></li>
+                </ul>
+            </nav>
+        </aside>
 
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div>
-      <h1>Meta Ads — Rendimiento por Anuncio</h1>
-      <p>Campaña [TT-TF] Formulario asesorías · Vol ETR (correcta)</p>
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- TOP BAR -->
+            <div class="top-bar">
+                <div class="top-bar-left">
+                    <h2>Meta Ads — Rendimiento por Anuncio</h2>
+                    <div class="period-picker" id="periodPicker">
+                        <div class="period-pill">📅 <span id="periodDisplay">Últimos 30 días</span></div>
+                        <div class="period-inputs">
+                            <div class="period-input-row">
+                                <label>Desde:</label>
+                                <input type="date" id="dateFrom">
+                            </div>
+                            <div class="period-input-row">
+                                <label>Hasta:</label>
+                                <input type="date" id="dateTo">
+                            </div>
+                            <div class="period-input-row">
+                                <button onclick="applyDateFilter()">Aplicar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DASHBOARD HEADER WITH ACTIONS -->
+            <div class="dashboard-header">
+                <div></div>
+                <div class="dashboard-actions">
+                    <button class="btn btn-secondary" onclick="exportCSV()">📥 Exportar CSV</button>
+                    <button class="btn btn-secondary" onclick="document.getElementById('csvImport').click()">📤 Importar CSV</button>
+                    <input type="file" id="csvImport" accept=".csv" onchange="importCSV(event)" style="display: none;">
+                    <button class="btn btn-primary" onclick="openAddModal()">+ Añadir Anuncio</button>
+                </div>
+            </div>
+
+            <!-- KPI CARDS -->
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-label">Gasto Total</div>
+                    <div class="kpi-value" id="kpiGasto">€0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Leads Totales</div>
+                    <div class="kpi-value" id="kpiLeads">0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">CPL Medio</div>
+                    <div class="kpi-value" id="kpiCPL">€0.00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Agendas</div>
+                    <div class="kpi-value" id="kpiAgendas">0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">€/Agenda Media</div>
+                    <div class="kpi-value" id="kpiCPA">€0.00</div>
+                </div>
+            </div>
+
+            <!-- TABLE -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ANUNCIO</th>
+                            <th>GASTO €</th>
+                            <th>LEADS</th>
+                            <th>CPL €</th>
+                            <th>AGENDAS</th>
+                            <th>€/AGENDA</th>
+                            <th style="width: 80px;">ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- CHART -->
+            <div class="chart-container">
+                <h3>€/Agenda por Anuncio</h3>
+                <canvas id="cpaChart"></canvas>
+            </div>
+        </div>
     </div>
-    <div class="topbar-r">
-      <div class="period-pill">📅 <span>1–23 mar 2026</span></div>
+
+    <!-- MODAL FOR ADD/EDIT -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Añadir Anuncio</h3>
+                <p id="modalDesc">Completa los campos para crear un nuevo anuncio</p>
+            </div>
+            <form onsubmit="saveAd(event)">
+                <div class="form-group">
+                    <label>Nombre del Anuncio</label>
+                    <input type="text" id="formNombre" placeholder="Ej: 7 hombres +30 años" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Gasto €</label>
+                        <input type="number" id="formGasto" placeholder="0.00" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Leads</label>
+                        <input type="number" id="formLeads" placeholder="0" min="0" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Agendas</label>
+                    <input type="number" id="formAgendas" placeholder="0" min="0" required>
+                </div>
+                <div class="calculated-info">
+                    <div>CPL: <strong id="calcCPL">€—</strong></div>
+                    <div>€/Agenda: <strong id="calcCPA">€—</strong></div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
 
-  <!-- KPI CARDS -->
-  <div class="kpi-g">
-    <div class="kpi kc-coral">
-      <div class="kpi-ico">💸</div>
-      <div class="kpi-lbl">Gasto Total</div>
-      <div class="kpi-val">€2.112</div>
-      <div class="kpi-d">€2.112,45 acumulados</div>
-    </div>
-    <div class="kpi kc-blue">
-      <div class="kpi-ico">🎯</div>
-      <div class="kpi-lbl">Leads Totales</div>
-      <div class="kpi-val">201</div>
-      <div class="kpi-d">Formularios enviados</div>
-    </div>
-    <div class="kpi kc-warn">
-      <div class="kpi-ico">📊</div>
-      <div class="kpi-lbl">CPL Medio</div>
-      <div class="kpi-val">€10,51</div>
-      <div class="kpi-d">Coste por lead</div>
-    </div>
-    <div class="kpi kc-ok">
-      <div class="kpi-ico">📅</div>
-      <div class="kpi-lbl">Agendas</div>
-      <div class="kpi-val">31</div>
-      <div class="kpi-d">Confirmadas en GHL</div>
-    </div>
-    <div class="kpi kc-purple">
-      <div class="kpi-ico">💰</div>
-      <div class="kpi-lbl">€/Agenda Media</div>
-      <div class="kpi-val">€68,14</div>
-      <div class="kpi-d">Coste por cita</div>
-    </div>
-  </div>
+    <script>
+        // CONSTANTS
+        const PASSWORD_HASH = 'e4a114787a29c3be3b795ae110cb790eec0299c6ef259cc03881e8a7ba791d49';
 
-  <!-- FILTROS -->
-  <div class="filter-section">
-    <h3>Filtros y Ordenación</h3>
-    <div class="filter-row">
-      <span class="filter-lbl">Mostrar:</span>
-      <button class="pill-btn active" onclick="setFilter('todos',this)">Todos</button>
-      <button class="pill-btn" onclick="setFilter('con',this)">Con agendas ✅</button>
-      <button class="pill-btn" onclick="setFilter('sin',this)">Sin agendas</button>
-    </div>
-    <div class="filter-row">
-      <span class="filter-lbl">Ordenar:</span>
-      <button class="sort-btn active" onclick="setSort('gasto','desc',this)">Gasto ↓</button>
-      <button class="sort-btn" onclick="setSort('leads','desc',this)">Leads ↓</button>
-      <button class="sort-btn" onclick="setSort('cpl','asc',this)">CPL ↑</button>
-      <button class="sort-btn" onclick="setSort('agendas','desc',this)">Agendas ↓</button>
-      <button class="sort-btn" onclick="setSort('cpa','asc',this)">€/Agenda ↑</button>
-    </div>
-  </div>
+        const DEFAULT_DATA = [
+            {nombre:'7 HOMBRES + 30 AÑOS',gasto:11.55,leads:1,cpl:11.55,agendas:1,cpa:11.55},
+            {nombre:'busco 5 dejar de arrastrarse',gasto:19.01,leads:4,cpl:4.75,agendas:1,cpa:19.01},
+            {nombre:'testimonio aitor',gasto:24.75,leads:4,cpl:6.19,agendas:1,cpa:24.75},
+            {nombre:'7 mujeres +30 años (×2 adsets)',gasto:251.89,leads:32,cpl:7.87,agendas:9,cpa:27.99},
+            {nombre:'busco 5 que quieran disfrutar',gasto:76.04,leads:12,cpl:6.34,agendas:2,cpa:38.02},
+            {nombre:'xim abc cuantificación',gasto:104.46,leads:9,cpl:11.61,agendas:2,cpa:52.23},
+            {nombre:'bernat sufrir subidas',gasto:210.08,leads:23,cpl:9.13,agendas:4,cpa:52.52},
+            {nombre:'dejar excusas y empezar',gasto:57.55,leads:3,cpl:19.18,agendas:1,cpa:57.55},
+            {nombre:'busco 5',gasto:198.28,leads:15,cpl:13.22,agendas:3,cpa:66.09},
+            {nombre:'si no entrenas fuerza (×3 adsets)',gasto:504.18,leads:43,cpl:11.73,agendas:6,cpa:84.03},
+            {nombre:'testimonio jon + eva',gasto:166.20,leads:12,cpl:13.85,agendas:1,cpa:166.20},
+            {nombre:'abro 5 plazas',gasto:149.05,leads:13,cpl:11.47,agendas:0,cpa:null},
+            {nombre:'Km 35 formato dibujo',gasto:88.76,leads:11,cpl:8.07,agendas:0,cpa:null},
+            {nombre:'Eres corredor o trail runner?',gasto:78.54,leads:5,cpl:15.71,agendas:0,cpa:null},
+            {nombre:'Vall de Aran',gasto:39.70,leads:1,cpl:39.70,agendas:0,cpa:null},
+            {nombre:'5 CORREDORES quieran dejar de sufrir',gasto:33.06,leads:3,cpl:11.02,agendas:0,cpa:null},
+            {nombre:'10 corredores preparar su próxima carrera',gasto:30.28,leads:1,cpl:30.28,agendas:0,cpa:null},
+            {nombre:'Xim cada vez + cansado',gasto:22.26,leads:2,cpl:11.13,agendas:0,cpa:null},
+            {nombre:'km 35 estatica Real',gasto:19.08,leads:4,cpl:4.77,agendas:0,cpa:null},
+            {nombre:'Trailrunner cuando la subida es dura',gasto:12.27,leads:2,cpl:6.14,agendas:0,cpa:null},
+            {nombre:'10 corredores preparar su próxima carrera - Copy',gasto:9.33,leads:1,cpl:9.33,agendas:0,cpa:null},
+            {nombre:'corredor vas al gym sin saber que hacer',gasto:3.20,leads:0,cpl:null,agendas:0,cpa:null},
+            {nombre:'cansado de hacerlo todo bien y estar estancado',gasto:1.08,leads:0,cpl:null,agendas:0,cpa:null},
+            {nombre:'plazas exclusivas (×2 adsets)',gasto:1.02,leads:0,cpl:null,agendas:0,cpa:null},
+            {nombre:'corredor cansado de llevar tiempo sin mejorar',gasto:0.83,leads:0,cpl:null,agendas:0,cpa:null}
+        ];
 
-  <!-- TABLE CARD -->
-  <div class="cc">
-    <h3>Anuncios <small id="tbl-count">25 anuncios</small></h3>
-    <div class="tbl-wrap">
-      <table id="ads-table">
-        <thead>
-          <tr>
-            <th>Anuncio</th>
-            <th>Gasto €</th>
-            <th>Leads</th>
-            <th>CPL €</th>
-            <th>Agendas</th>
-            <th>€/Agenda</th>
-          </tr>
-        </thead>
-        <tbody id="ads-tbody"></tbody>
-      </table>
-    </div>
-  </div>
+        // STATE
+        let ads = [];
+        let editingIndex = null;
+        let chart = null;
 
-  <!-- CHART -->
-  <div class="cc">
-    <h3>€/Agenda por Anuncio <small>solo anuncios con citas confirmadas · menor es mejor</small></h3>
-    <div class="cw h320">
-      <canvas id="ch-cpa"></canvas>
-    </div>
-  </div>
+        // INITIALIZATION
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') checkPassword();
+            });
 
-</div><!-- /main -->
+            document.getElementById('periodPicker').addEventListener('click', function(e) {
+                if (e.target.closest('.period-pill')) {
+                    this.classList.toggle('open');
+                }
+            });
 
+            document.addEventListener('click', (e) => {
+                const picker = document.getElementById('periodPicker');
+                if (!picker.contains(e.target)) {
+                    picker.classList.remove('open');
+                }
+            });
 
+            document.getElementById('formGasto').addEventListener('input', updateCalculations);
+            document.getElementById('formLeads').addEventListener('input', updateCalculations);
+            document.getElementById('formAgendas').addEventListener('input', updateCalculations);
 
+            loadData();
+        });
 
+        // PASSWORD CHECKING
+        async function checkPassword() {
+            const input = document.getElementById('passwordInput').value;
+            const hash = await sha256(input);
+            const errorEl = document.getElementById('lockError');
 
-</div>
-<script>
-const HASH='e4a114787a29c3be3b795ae110cb790eec0299c6ef259cc03881e8a7ba791d49';
-async function sha256(m){const e=new TextEncoder().encode(m);const h=await crypto.subtle.digest('SHA-256',e);return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('')}
-async function checkPwd(){const v=document.getElementById('pwd').value;const h=await sha256(v);if(h===HASH){document.getElementById('lock-screen').style.display='none';document.getElementById('dashboard').style.display='block';document.body.className='';initDashboard();}else{document.getElementById('err').style.display='block';document.getElementById('pwd').style.borderColor='#DC2626';setTimeout(()=>{document.getElementById('err').style.display='none';document.getElementById('pwd').style.borderColor='#FFD8CE'},2000)}}
-function initDashboard(){
-
-// ── DATA ──
-const ADS = [
-  { nombre: '7 HOMBRES + 30 AÑOS',                       gasto: 11.55,  leads: 1,  cpl: 11.55,  agendas: 1, cpa: 11.55  },
-  { nombre: 'busco 5 dejar de arrastrarse',               gasto: 19.01,  leads: 4,  cpl: 4.75,   agendas: 1, cpa: 19.01  },
-  { nombre: 'testimonio aitor',                           gasto: 24.75,  leads: 4,  cpl: 6.19,   agendas: 1, cpa: 24.75  },
-  { nombre: '7 mujeres +30 años (×2 adsets)',             gasto: 251.89, leads: 32, cpl: 7.87,   agendas: 9, cpa: 27.99  },
-  { nombre: 'busco 5 que quieran disfrutar',              gasto: 76.04,  leads: 12, cpl: 6.34,   agendas: 2, cpa: 38.02  },
-  { nombre: 'xim abc cuantificación',                     gasto: 104.46, leads: 9,  cpl: 11.61,  agendas: 2, cpa: 52.23  },
-  { nombre: 'bernat sufrir subidas',                      gasto: 210.08, leads: 23, cpl: 9.13,   agendas: 4, cpa: 52.52  },
-  { nombre: 'dejar excusas y empezar',                    gasto: 57.55,  leads: 3,  cpl: 19.18,  agendas: 1, cpa: 57.55  },
-  { nombre: 'busco 5',                                    gasto: 198.28, leads: 15, cpl: 13.22,  agendas: 3, cpa: 66.09  },
-  { nombre: 'si no entrenas fuerza (×3 adsets)',          gasto: 504.18, leads: 43, cpl: 11.73,  agendas: 6, cpa: 84.03  },
-  { nombre: 'testimonio jon + eva',                       gasto: 166.20, leads: 12, cpl: 13.85,  agendas: 1, cpa: 166.20 },
-  { nombre: 'abro 5 plazas',                              gasto: 149.05, leads: 13, cpl: 11.47,  agendas: 0, cpa: null   },
-  { nombre: 'Km 35 formato dibujo',                       gasto: 88.76,  leads: 11, cpl: 8.07,   agendas: 0, cpa: null   },
-  { nombre: 'Eres corredor o trail runner?',              gasto: 78.54,  leads: 5,  cpl: 15.71,  agendas: 0, cpa: null   },
-  { nombre: 'Vall de Aran',                               gasto: 39.70,  leads: 1,  cpl: 39.70,  agendas: 0, cpa: null   },
-  { nombre: '5 CORREDORES quieran dejar de sufrir',       gasto: 33.06,  leads: 3,  cpl: 11.02,  agendas: 0, cpa: null   },
-  { nombre: '10 corredores preparar su próxima carrera',  gasto: 30.28,  leads: 1,  cpl: 30.28,  agendas: 0, cpa: null   },
-  { nombre: 'Xim cada vez + cansado',                     gasto: 22.26,  leads: 2,  cpl: 11.13,  agendas: 0, cpa: null   },
-  { nombre: 'km 35 estatica Real',                        gasto: 19.08,  leads: 4,  cpl: 4.77,   agendas: 0, cpa: null   },
-  { nombre: 'Trailrunner cuando la subida es dura',       gasto: 12.27,  leads: 2,  cpl: 6.14,   agendas: 0, cpa: null   },
-  { nombre: '10 corredores preparar su próxima carrera - Copy', gasto: 9.33, leads: 1, cpl: 9.33, agendas: 0, cpa: null  },
-  { nombre: 'corredor vas al gym sin saber que hacer',    gasto: 3.20,   leads: 0,  cpl: null,   agendas: 0, cpa: null   },
-  { nombre: 'cansado de hacerlo todo bien y estar estancado', gasto: 1.08, leads: 0, cpl: null,  agendas: 0, cpa: null   },
-  { nombre: 'plazas exclusivas (×2 adsets)',              gasto: 1.02,   leads: 0,  cpl: null,   agendas: 0, cpa: null   },
-  { nombre: 'corredor cansado de llevar tiempo sin mejorar', gasto: 0.83, leads: 0, cpl: null,   agendas: 0, cpa: null   },
-];
-
-// ── STATE ──
-let currentFilter = 'todos';
-let currentSort   = { key: 'gasto', dir: 'desc' };
-
-// ── FILTER ──
-function setFilter(f, btn) {
-  currentFilter = f;
-  document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderTable();
-}
-
-// ── SORT ──
-function setSort(key, dir, btn) {
-  currentSort = { key, dir };
-  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderTable();
-}
-
-// ── FILTER + SORT DATA ──
-function getFiltered() {
-  let data = ADS.slice();
-  if (currentFilter === 'con')  data = data.filter(a => a.agendas > 0);
-  if (currentFilter === 'sin')  data = data.filter(a => a.agendas === 0);
-
-  const { key, dir } = currentSort;
-  data.sort((a, b) => {
-    let va = a[key], vb = b[key];
-    if (va === null && vb === null) return 0;
-    if (va === null) return dir === 'asc' ? 1 : -1;
-    if (vb === null) return dir === 'asc' ? -1 : 1;
-    return dir === 'asc' ? va - vb : vb - va;
-  });
-  return data;
-}
-
-// ── €/Agenda color ──
-function cpaClass(cpa) {
-  if (cpa === null) return 'cost-dash';
-  if (cpa < 40)  return 'cost-green';
-  if (cpa <= 80) return 'cost-yellow';
-  return 'cost-red';
-}
-
-function fmt(n, dec = 2) {
-  if (n === null || n === undefined) return '—';
-  return n.toLocaleString('es-ES', { minimumFractionDigits: dec, maximumFractionDigits: dec });
-}
-
-// ── RENDER TABLE ──
-function renderTable() {
-  const data = getFiltered();
-  document.getElementById('tbl-count').textContent = data.length + ' anuncio' + (data.length !== 1 ? 's' : '');
-
-  const tbody = document.getElementById('ads-tbody');
-  tbody.innerHTML = data.map(a => {
-    const badge = a.agendas > 0
-      ? `<span class="badge b-ok">${a.agendas} ✅</span>`
-      : `<span style="color:var(--muted)">0</span>`;
-    const cpaCell = `<span class="${cpaClass(a.cpa)}">${a.cpa !== null ? '€' + fmt(a.cpa) : '—'}</span>`;
-    return `<tr>
-      <td style="font-weight:${a.agendas>0?'600':'400'};color:${a.agendas>0?'var(--text)':'var(--textM)'}">${a.nombre}</td>
-      <td>€${fmt(a.gasto)}</td>
-      <td>${a.leads > 0 ? a.leads : '<span style="color:var(--muted)">0</span>'}</td>
-      <td>${a.cpl !== null ? '€' + fmt(a.cpl) : '<span style="color:var(--muted)">—</span>'}</td>
-      <td>${badge}</td>
-      <td>${cpaCell}</td>
-    </tr>`;
-  }).join('');
-}
-
-// ── RENDER CHART ──
-function renderChart() {
-  const withAgendas = ADS.filter(a => a.agendas > 0 && a.cpa !== null)
-    .slice()
-    .sort((a, b) => a.cpa - b.cpa);
-
-  const labels = withAgendas.map(a => a.nombre);
-  const vals   = withAgendas.map(a => a.cpa);
-  const colors = vals.map(v => v < 40 ? '#16A34A' : v <= 80 ? '#D97706' : '#DC2626');
-
-  const ctx = document.getElementById('ch-cpa');
-  new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: '€/Agenda',
-        data: vals,
-        backgroundColor: colors,
-        borderRadius: 6,
-        borderSkipped: false,
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1C1410',
-          padding: 10,
-          cornerRadius: 8,
-          callbacks: {
-            label: ctx => ` €${ctx.parsed.x.toFixed(2)}/agenda`,
-            afterLabel: ctx => {
-              const ad = withAgendas[ctx.dataIndex];
-              return [` Agendas: ${ad.agendas}`, ` Gasto: €${ad.gasto.toFixed(2)}`, ` Leads: ${ad.leads}`];
+            if (hash === PASSWORD_HASH) {
+                document.getElementById('lockScreen').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                if (ads.length > 0) {
+                    renderTable();
+                    updateKPIs();
+                    updateChart();
+                }
+            } else {
+                errorEl.classList.add('show');
+                setTimeout(() => {
+                    errorEl.classList.remove('show');
+                    document.getElementById('passwordInput').value = '';
+                }, 2000);
             }
-          }
         }
-      },
-      scales: {
-        x: {
-          grid: { color: 'rgba(255,216,206,0.6)' },
-          ticks: {
-            color: '#9C8A84', font: { size: 11 },
-            callback: v => '€' + v
-          },
-          beginAtZero: true
-        },
-        y: {
-          grid: { display: false },
-          ticks: {
-            color: '#1C1410', font: { size: 11.5 },
-            callback: function(val) {
-              const lbl = this.getLabelForValue(val);
-              return lbl.length > 38 ? lbl.slice(0, 36) + '…' : lbl;
+
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // DATA MANAGEMENT
+        function loadData() {
+            const stored = localStorage.getItem('metaAdsData');
+            if (stored) {
+                ads = JSON.parse(stored);
+            } else {
+                ads = JSON.parse(JSON.stringify(DEFAULT_DATA));
+                saveData();
             }
-          }
         }
-      }
-    }
-  });
-}
 
-// ── LEGEND ──
-function renderLegend() {
-  const legendHtml = `
-    <div style="display:flex;gap:16px;align-items:center;margin-top:10px;font-size:12px;">
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3  ;background:#16A34A;display:inline-block"></span> &lt;€40 (óptimo)</span>
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:#D97706;display:inline-block"></span> €40–€80 (aceptable)</span>
-      <span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:#DC2626;display:inline-block"></span> &gt;€80 (alto)</span>
-    </div>`;
-  document.querySelector('.cc:last-child h3').insertAdjacentHTML('afterend', legendHtml);
-}
+        function saveData() {
+            localStorage.setItem('metaAdsData', JSON.stringify(ads));
+        }
 
-// ── INIT ──
-renderTable();
-renderChart();
-renderLegend();
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
 
-}
-</script>
+            ads.forEach((ad, idx) => {
+                const row = document.createElement('tr');
+                const cplValue = ad.cpl ? `€${ad.cpl.toFixed(2)}` : '—';
+                const cpaValue = ad.cpa ? `€${ad.cpa.toFixed(2)}` : '—';
+                const agendaBadge = ad.agendas > 0 
+                    ? `<span class="badge">${ad.agendas}</span>` 
+                    : `<span class="badge zero">${ad.agendas}</span>`;
+
+                row.innerHTML = `
+                    <td><strong>${escapeHtml(ad.nombre)}</strong></td>
+                    <td>€${ad.gasto.toFixed(2)}</td>
+                    <td>${ad.leads}</td>
+                    <td>${cplValue}</td>
+                    <td>${agendaBadge}</td>
+                    <td><span class="cpa-value">${cpaValue}</span></td>
+                    <td>
+                        <div class="actions-cell">
+                            <button class="icon-btn" onclick="openEditModal(${idx})" title="Editar">✏️</button>
+                            <button class="icon-btn delete" onclick="deleteAd(${idx})" title="Eliminar">🗑️</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateKPIs() {
+            const totalGasto = ads.reduce((sum, ad) => sum + ad.gasto, 0);
+            const totalLeads = ads.reduce((sum, ad) => sum + ad.leads, 0);
+            const totalAgendas = ads.reduce((sum, ad) => sum + ad.agendas, 0);
+            const cplMedio = totalLeads > 0 ? totalGasto / totalLeads : 0;
+            const cpaMedio = totalAgendas > 0 ? totalGasto / totalAgendas : 0;
+
+            document.getElementById('kpiGasto').textContent = `€${totalGasto.toFixed(2)}`;
+            document.getElementById('kpiLeads').textContent = totalLeads;
+            document.getElementById('kpiCPL').textContent = `€${cplMedio.toFixed(2)}`;
+            document.getElementById('kpiAgendas').textContent = totalAgendas;
+            document.getElementById('kpiCPA').textContent = `€${cpaMedio.toFixed(2)}`;
+        }
+
+        function updateChart() {
+            const labels = ads.map(ad => ad.nombre.substring(0, 20));
+            const data = ads.map(ad => ad.cpa || 0);
+
+            if (chart) {
+                chart.data.labels = labels;
+                chart.data.datasets[0].data = data;
+                chart.update();
+            } else {
+                const ctx = document.getElementById('cpaChart').getContext('2d');
+                chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '€/Agenda',
+                            data: data,
+                            backgroundColor: '#FF6248',
+                            borderRadius: 6,
+                            borderSkipped: false
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '€' + value.toFixed(2);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // MODAL MANAGEMENT
+        function openAddModal() {
+            editingIndex = null;
+            document.getElementById('modalTitle').textContent = 'Añadir Anuncio';
+            document.getElementById('modalDesc').textContent = 'Completa los campos para crear un nuevo anuncio';
+            document.getElementById('formNombre').value = '';
+            document.getElementById('formGasto').value = '';
+            document.getElementById('formLeads').value = '';
+            document.getElementById('formAgendas').value = '';
+            updateCalculations();
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+
+        function openEditModal(idx) {
+            editingIndex = idx;
+            const ad = ads[idx];
+            document.getElementById('modalTitle').textContent = 'Editar Anuncio';
+            document.getElementById('modalDesc').textContent = 'Actualiza la información del anuncio';
+            document.getElementById('formNombre').value = ad.nombre;
+            document.getElementById('formGasto').value = ad.gasto;
+            document.getElementById('formLeads').value = ad.leads;
+            document.getElementById('formAgendas').value = ad.agendas;
+            updateCalculations();
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            editingIndex = null;
+        }
+
+        document.getElementById('modalOverlay').addEventListener('click', (e) => {
+            if (e.target.id === 'modalOverlay') closeModal();
+        });
+
+        function updateCalculations() {
+            const gasto = parseFloat(document.getElementById('formGasto').value) || 0;
+            const leads = parseFloat(document.getElementById('formLeads').value) || 0;
+            const agendas = parseFloat(document.getElementById('formAgendas').value) || 0;
+
+            const cpl = leads > 0 ? gasto / leads : null;
+            const cpa = agendas > 0 ? gasto / agendas : null;
+
+            document.getElementById('calcCPL').textContent = cpl ? `€${cpl.toFixed(2)}` : '€—';
+            document.getElementById('calcCPA').textContent = cpa ? `€${cpa.toFixed(2)}` : '€—';
+        }
+
+        function saveAd(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('formNombre').value;
+            const gasto = parseFloat(document.getElementById('formGasto').value);
+            const leads = parseInt(document.getElementById('formLeads').value);
+            const agendas = parseInt(document.getElementById('formAgendas').value);
+
+            const cpl = leads > 0 ? gasto / leads : null;
+            const cpa = agendas > 0 ? gasto / agendas : null;
+
+            const newAd = { nombre, gasto, leads, cpl, agendas, cpa };
+
+            if (editingIndex !== null) {
+                ads[editingIndex] = newAd;
+            } else {
+                ads.push(newAd);
+            }
+
+            saveData();
+            renderTable();
+            updateKPIs();
+            updateChart();
+            closeModal();
+        }
+
+        function deleteAd(idx) {
+            if (confirm('¿Estás seguro de que quieres eliminar este anuncio?')) {
+                ads.splice(idx, 1);
+                saveData();
+                renderTable();
+                updateKPIs();
+                updateChart();
+            }
+        }
+
+        // EXPORT/IMPORT
+        function exportCSV() {
+            const headers = ['ANUNCIO', 'GASTO €', 'LEADS', 'CPL €', 'AGENDAS', '€/AGENDA'];
+            const rows = ads.map(ad => [
+                ad.nombre,
+                ad.gasto.toFixed(2),
+                ad.leads,
+                ad.cpl ? ad.cpl.toFixed(2) : '',
+                ad.agendas,
+                ad.cpa ? ad.cpa.toFixed(2) : ''
+            ]);
+
+            let csv = headers.join(',') + '\n';
+            rows.forEach(row => {
+                csv += row.map(cell => `"${cell}"`).join(',') + '\n';
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'meta_ads_export.csv');
+            link.click();
+        }
+
+        function importCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n').filter(l => l.trim());
+                    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+
+                    const newAds = [];
+                    for (let i = 1; i < lines.length; i++) {
+                        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                        if (values.length >= 3) {
+                            newAds.push({
+                                nombre: values[0],
+                                gasto: parseFloat(values[1]) || 0,
+                                leads: parseInt(values[2]) || 0,
+                                cpl: values[3] ? parseFloat(values[3]) : null,
+                                agendas: parseInt(values[4]) || 0,
+                                cpa: values[5] ? parseFloat(values[5]) : null
+                            });
+                        }
+                    }
+
+                    if (newAds.length > 0) {
+                        ads = newAds;
+                        saveData();
+                        renderTable();
+                        updateKPIs();
+                        updateChart();
+                        alert('Datos importados correctamente');
+                    }
+                } catch (err) {
+                    alert('Error al importar CSV: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            document.getElementById('csvImport').value = '';
+        }
+
+        function applyDateFilter() {
+            const from = document.getElementById('dateFrom').value;
+            const to = document.getElementById('dateTo').value;
+            
+            if (from && to) {
+                document.getElementById('periodDisplay').textContent = `${from} a ${to}`;
+            }
+            
+            document.getElementById('periodPicker').classList.remove('open');
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+    </script>
 </body>
 </html>
