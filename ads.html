@@ -6,6 +6,12 @@
     <title>Meta Ads Dashboard - Estrategas</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
             --bg: #FFF5F2;
             --surface: #FFFFFF;
@@ -29,322 +35,197 @@
             --errS: rgba(220,38,38,.1);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: var(--bg);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
             color: var(--text);
-            line-height: 1.6;
         }
 
-        body.locked {
-            overflow: hidden;
-        }
-
-        /* LOCK SCREEN */
-        .lock-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, var(--bg) 0%, #FFE5D9 100%);
+        .login-screen {
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 9999;
+            min-height: 100vh;
+            background: var(--bg);
         }
 
-        .lock-screen.hidden {
-            display: none;
-        }
-
-        .lock-container {
-            background: var(--surface-light);
+        .login-box {
+            background: var(--surface);
+            border-radius: 16px;
             padding: 40px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 100%;
             max-width: 400px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
 
-        .lock-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-        }
-
-        .lock-container h1 {
+        .login-box h1 {
             font-size: 24px;
-            margin-bottom: 10px;
-            color: var(--text);
+            margin-bottom: 8px;
+            color: var(--coral);
         }
 
-        .lock-container p {
+        .login-box p {
             color: var(--muted);
-            margin-bottom: 30px;
+            margin-bottom: 24px;
             font-size: 14px;
         }
 
-        .lock-container input {
+        .login-box input {
             width: 100%;
             padding: 12px;
-            margin-bottom: 20px;
             border: 1px solid var(--border);
-            border-radius: 6px;
-            background: var(--bg);
-            color: var(--text);
-            font-size: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            background: var(--surface-light);
         }
 
-        .lock-container input:focus {
-            outline: none;
-            border-color: var(--blue);
-            box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
-        }
-
-        .lock-container button {
+        .login-box button {
             width: 100%;
             padding: 12px;
-            background: var(--blue);
+            background: var(--coral);
             color: white;
             border: none;
-            border-radius: 6px;
-            font-size: 16px;
+            border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.3s;
+            font-size: 14px;
         }
 
-        .lock-container button:hover {
+        .login-box button:hover {
             background: var(--coralH);
         }
 
-        .lock-error {
-            color: var(--coral);
-            font-size: 14px;
-            margin-bottom: 15px;
+        .login-error {
+            color: #DC2626;
+            font-size: 13px;
+            margin-bottom: 16px;
             display: none;
         }
 
-        /* LAYOUT */
-        .hidden {
-            display: none !important;
-        }
-
-        .dashboard {
-            display: flex;
+        .main-container {
+            display: none;
+            flex: 1;
+            flex-direction: row;
             min-height: 100vh;
         }
 
-        /* SIDEBAR */
         .sidebar {
-            width: 250px;
+            width: 260px;
             background: var(--surface);
             border-right: 1px solid var(--border);
-            padding: 20px;
+            padding: 24px;
             position: fixed;
+            left: 0;
+            top: 0;
             height: 100vh;
             overflow-y: auto;
-            z-index: 100;
         }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 40px;
-            text-decoration: none;
-            color: var(--text);
+        .sidebar-logo {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--coral);
+            margin-bottom: 32px;
+            line-height: 1.4;
+            letter-spacing: 0.5px;
         }
 
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--coral);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 20px;
-        }
-
-        .logo-text h2 {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .logo-text p {
-            font-size: 12px;
-            color: var(--muted);
-        }
-
-        .nav-links {
-            list-style: none;
-        }
-
-        .nav-links li {
-            margin-bottom: 10px;
-        }
-
-        .nav-links a {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px;
-            color: var(--muted);
-            text-decoration: none;
-            border-radius: 6px;
-            transition: all 0.3s;
-            font-size: 14px;
-        }
-
-        .nav-links a:hover {
-            background: var(--surface-light);
-            color: var(--text);
-        }
-
-        .nav-links a.active {
-            background: var(--coral);
-            color: white;
-        }
-
-        /* MAIN CONTENT */
-        .main-content {
-            margin-left: 250px;
-            flex: 1;
-            padding: 20px;
-        }
-
-        /* TOPBAR */
-        .topbar {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px 20px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .campaign-info {
+        .sidebar-nav {
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
 
-        .campaign-title {
-            font-size: 14px;
-            color: var(--muted);
-        }
-
-        .campaign-title strong {
-            color: var(--text);
-        }
-
-        .period-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: var(--surface-light);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            color: var(--text);
-            width: fit-content;
-        }
-
-        /* KPI CARDS */
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 30px;
-        }
-
-        .kpi-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
+        .sidebar-nav a {
+            padding: 12px 16px;
             border-radius: 8px;
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
+            color: var(--textM);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
         }
 
-        .kpi-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
+        .sidebar-nav a:hover {
+            background: var(--coralS);
+            color: var(--coral);
         }
 
-        .kpi-card.coral::before { background: var(--coral); }
-        .kpi-card.blue::before { background: var(--blue); }
-        .kpi-card.warn::before { background: var(--warn); }
-        .kpi-card.green::before { background: var(--green); }
-        .kpi-card.purple::before { background: var(--purple); }
+        .sidebar-nav a.active {
+            background: var(--coralS);
+            color: var(--coral);
+        }
 
-        .kpi-header {
+        .content {
+            margin-left: 260px;
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .header-row {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 10px;
+            align-items: center;
+            margin-bottom: 32px;
         }
 
-        .kpi-icon {
-            font-size: 24px;
-        }
-
-        .kpi-label {
-            font-size: 12px;
-            color: var(--muted);
+        .header-left h1 {
+            font-size: 28px;
             margin-bottom: 8px;
         }
 
-        .kpi-value {
-            font-size: 28px;
-            font-weight: 600;
-            color: var(--text);
-        }
-
-        .kpi-desc {
-            font-size: 11px;
+        .header-left p {
             color: var(--muted);
-            margin-top: 10px;
-        }
-
-        /* ACTION BUTTONS */
-        .actions-bar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 10px 16px;
-            border-radius: 6px;
-            border: none;
             font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .live-badge {
+            background: var(--okS);
+            border: 1px solid var(--green);
+            color: var(--green);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
             align-items: center;
             gap: 6px;
         }
 
+        .live-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
         .btn-primary {
-            background: var(--blue);
+            background: var(--coral);
             color: white;
         }
 
@@ -359,129 +240,138 @@
         }
 
         .btn-secondary:hover {
-            background: var(--border);
+            background: var(--borderL);
         }
 
-        .btn-sm {
-            padding: 6px 10px;
+        .last-update {
+            color: var(--muted);
             font-size: 12px;
         }
 
-        .btn-icon {
-            background: none;
-            border: none;
-            color: var(--muted);
-            cursor: pointer;
-            font-size: 14px;
-            padding: 4px 8px;
-            transition: color 0.3s;
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
         }
 
-        .btn-icon:hover {
-            color: var(--text);
-        }
-
-        .btn-icon.delete:hover {
-            color: var(--coral);
-        }
-
-        /* FILTERS & SORTING */
-        .filters-section {
+        .kpi-card {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px 20px;
-            margin-bottom: 20px;
+            border-radius: 12px;
+            padding: 20px;
         }
 
-        .filter-group, .sort-group {
+        .kpi-label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 700;
             margin-bottom: 12px;
         }
 
-        .filter-group:last-child, .sort-group:last-child {
+        .kpi-card.coral .kpi-value { color: var(--coral); }
+        .kpi-card.green .kpi-value { color: var(--green); }
+        .kpi-card.blue .kpi-value { color: var(--blue); }
+        .kpi-card.purple .kpi-value { color: var(--purple); }
+
+        .kpi-sub {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .controls {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .control-section {
+            margin-bottom: 16px;
+        }
+
+        .control-section:last-child {
             margin-bottom: 0;
         }
 
-        .group-label {
+        .control-label {
             font-size: 12px;
-            color: var(--muted);
-            margin-bottom: 8px;
             font-weight: 600;
+            color: var(--muted);
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: block;
         }
 
-        .pill-buttons {
+        .pills {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
         }
 
         .pill {
-            padding: 8px 14px;
+            padding: 8px 16px;
             border-radius: 20px;
             border: 1px solid var(--border);
-            background: transparent;
-            color: var(--muted);
-            font-size: 12px;
+            background: var(--surface-light);
+            color: var(--text);
             cursor: pointer;
-            transition: all 0.3s;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
         }
 
         .pill:hover {
-            border-color: var(--text);
-            color: var(--text);
+            border-color: var(--coral);
+            background: var(--coralS);
+            color: var(--coral);
         }
 
         .pill.active {
-            background: var(--blue);
-            border-color: var(--blue);
+            background: var(--coral);
             color: white;
+            border-color: var(--coral);
         }
 
-        /* TABLE */
         .table-container {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 12px;
             overflow: hidden;
-            margin-bottom: 30px;
-        }
-
-        .table-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
-            font-size: 12px;
-            color: var(--muted);
-            font-weight: 600;
-            text-transform: uppercase;
+            margin-bottom: 32px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
         }
 
         th {
             background: var(--surface-light);
-            padding: 12px 16px;
+            padding: 16px;
             text-align: left;
-            color: var(--muted);
             font-weight: 600;
-            font-size: 11px;
-            text-transform: uppercase;
+            font-size: 12px;
+            color: var(--textM);
             border-bottom: 1px solid var(--border);
-            cursor: pointer;
-            user-select: none;
-        }
-
-        th:hover {
-            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         td {
-            padding: 12px 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 16px;
+            border-bottom: 1px solid var(--borderL);
+            font-size: 13px;
         }
 
         tr:last-child td {
@@ -489,911 +379,721 @@
         }
 
         tr:hover {
-            background: rgba(255, 255, 255, 0.02);
+            background: var(--surface-light);
         }
 
-        .cost-green { color: var(--green); font-weight: 600; }
-        .cost-yellow { color: var(--warn); font-weight: 600; }
-        .cost-red { color: var(--coral); font-weight: 600; }
-        .cost-dash { color: var(--muted); }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: rgba(81, 207, 102, 0.15);
-            color: var(--green);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .actions-cell {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        /* CHART */
-        .chart-container {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .chart-title {
-            font-size: 14px;
-            color: var(--text);
-            margin-bottom: 20px;
+        .cpl-cell {
             font-weight: 600;
         }
 
-        #adsChart {
-            max-height: 400px;
+        .cpl-green {
+            color: var(--green);
+            background: var(--okS);
+            padding: 4px 8px;
+            border-radius: 4px;
         }
 
-        .chart-legend {
-            display: flex;
-            gap: 24px;
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid var(--border);
-            flex-wrap: wrap;
+        .cpl-yellow {
+            color: var(--warn);
+            background: var(--warnS);
+            padding: 4px 8px;
+            border-radius: 4px;
         }
 
-        .legend-item {
+        .cpl-red {
+            color: #DC2626;
+            background: var(--errS);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .actions {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            gap: 6px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
             font-size: 12px;
-            color: var(--muted);
+            font-weight: 500;
+            transition: all 0.2s;
         }
 
-        .legend-color {
-            width: 16px;
-            height: 16px;
-            border-radius: 3px;
+        .action-edit {
+            background: var(--blueS);
+            color: var(--blue);
         }
 
-        .legend-green { background: var(--green); }
-        .legend-yellow { background: var(--warn); }
-        .legend-red { background: var(--coral); }
-
-        /* MODAL */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 200;
+        .action-edit:hover {
+            background: var(--blue);
+            color: white;
         }
 
-        .modal-overlay.hidden {
-            display: none;
+        .action-delete {
+            background: var(--errS);
+            color: #DC2626;
         }
 
-        .modal {
+        .action-delete:hover {
+            background: #DC2626;
+            color: white;
+        }
+
+        .chart-container {
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 32px;
-            max-width: 500px;
-            width: 90%;
+            padding: 24px;
+            margin-bottom: 32px;
         }
 
-        .modal h2 {
+        .chart-container h3 {
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 32px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
             font-size: 20px;
+            font-weight: 700;
             margin-bottom: 24px;
             color: var(--text);
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .form-group label {
             display: block;
-            font-size: 12px;
-            color: var(--muted);
-            margin-bottom: 6px;
-            text-transform: uppercase;
+            font-size: 13px;
             font-weight: 600;
+            color: var(--textM);
+            margin-bottom: 6px;
         }
 
-        .form-group input, .form-group textarea {
+        .form-group input {
             width: 100%;
-            padding: 10px 12px;
-            background: var(--bg);
+            padding: 10px;
             border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text);
-            font-size: 14px;
-            font-family: inherit;
+            border-radius: 8px;
+            font-size: 13px;
+            background: var(--surface-light);
         }
 
-        .form-group input:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: var(--blue);
-            box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        .calc-display {
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 10px 12px;
-            font-size: 12px;
-            color: var(--muted);
-            margin-top: 6px;
-            font-family: 'Monaco', monospace;
-        }
-
-        .modal-buttons {
+        .form-actions {
             display: flex;
             gap: 12px;
-            margin-top: 28px;
+            margin-top: 24px;
         }
 
-        .modal-buttons button {
+        .form-actions button {
             flex: 1;
             padding: 12px;
-            border-radius: 6px;
+            border-radius: 8px;
             border: none;
-            font-size: 14px;
-            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 13px;
         }
 
-        .modal-buttons .btn-primary {
-            background: var(--blue);
+        .form-actions .btn-primary {
+            background: var(--coral);
             color: white;
         }
 
-        .modal-buttons .btn-primary:hover {
+        .form-actions .btn-primary:hover {
             background: var(--coralH);
         }
 
-        .modal-buttons .btn-secondary {
+        .form-actions .btn-secondary {
             background: var(--surface-light);
             color: var(--text);
             border: 1px solid var(--border);
         }
 
-        .modal-buttons .btn-secondary:hover {
-            background: var(--border);
+        .form-actions .btn-secondary:hover {
+            background: var(--borderL);
         }
 
-        /* FILE INPUT */
-        #csvFileInput {
-            display: none;
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--muted);
         }
 
-        /* RESPONSIVE */
-        @media (max-width: 900px) {
+        .spinner {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--coral);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: var(--errS);
+            color: #DC2626;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border: 1px solid #FECACA;
+        }
+
+        @media (max-width: 768px) {
             .sidebar {
-                width: 80px;
-            }
-
-            .sidebar .logo-text {
                 display: none;
             }
 
-            .main-content {
-                margin-left: 80px;
-            }
-
-            .kpi-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .sidebar {
-                transform: translateX(-100%);
-                transition: transform 0.3s;
-                z-index: 150;
-                width: 250px;
-            }
-
-            .main-content {
+            .content {
                 margin-left: 0;
+                padding: 16px;
             }
 
             .kpi-grid {
                 grid-template-columns: 1fr;
-            }
-
-            .pill-buttons {
-                flex-direction: column;
-            }
-
-            .pill {
-                width: 100%;
             }
 
             table {
-                font-size: 11px;
+                font-size: 12px;
             }
 
             th, td {
-                padding: 8px 12px;
+                padding: 12px;
+            }
+
+            .modal-content {
+                width: 90%;
+                padding: 24px;
             }
         }
     </style>
 </head>
-<body class="locked">
-    <!-- LOCK SCREEN -->
-    <div class="lock-screen" id="lockScreen">
-        <div class="lock-container">
-            <div class="lock-icon">🔒</div>
-            <h1>Acceso Privado</h1>
-            <p>Ingresa tu contraseña para continuar</p>
-            <div class="lock-error" id="lockError">Contraseña incorrecta</div>
+<body>
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <h1>Meta Ads Dashboard</h1>
+            <p>Estrategas del Trail & Run</p>
+            <div class="login-error" id="loginError"></div>
             <input type="password" id="passwordInput" placeholder="Contraseña" />
             <button onclick="checkPassword()">Acceder</button>
         </div>
     </div>
 
-    <!-- DASHBOARD -->
-    <div class="dashboard">
-        <!-- SIDEBAR -->
-        <aside class="sidebar">
-            <a href="#" class="logo">
-                <div class="logo-icon">E</div>
-                <div class="logo-text">
-                    <h2>Estrategas</h2>
-                    <p>Control de Negocio</p>
-                </div>
-            </a>
-            <ul class="nav-links">
-                <li><a href="index.html">📲 Marketing</a></li>
-                <li><a href="clientes.html">🏋️ Clientes</a></li>
-                <li><a href="ads.html" class="active">📣 Meta Ads</a></li>
-            </ul>
-        </aside>
+    <div class="main-container" id="mainContainer">
+        <div class="sidebar">
+            <div class="sidebar-logo">ESTRATEGAS DEL TRAIL & RUN</div>
+            <div class="sidebar-nav">
+                <a href="#" class="active">Dashboard Ads</a>
+                <a href="#">Analytics</a>
+                <a href="#">Configuración</a>
+            </div>
+        </div>
 
-        <!-- MAIN CONTENT -->
-        <main class="main-content">
-            <!-- TOPBAR -->
-            <div class="topbar">
-                <div class="campaign-info">
-                    <div class="campaign-title">
-                        Campaña <strong>[TT-TF] Formulario asesorías · Vol ETR (correcta)</strong>
-                    </div>
-                    <div class="period-pill">📅 1–23 mar 2026</div>
+        <div class="content">
+            <div class="header-row">
+                <div class="header-left">
+                    <h1>Meta Ads</h1>
+                    <p id="lastUpdate" class="last-update">Última actualización: --:--</p>
+                </div>
+                <div class="header-right">
+                    <div class="live-badge">DATOS EN VIVO</div>
+                    <button class="btn btn-primary" onclick="refreshData()">Actualizar</button>
+                    <button class="btn btn-secondary" onclick="openAddModal()">+ Nuevo Anuncio</button>
+                    <button class="btn btn-secondary" onclick="exportCSV()">Descargar CSV</button>
+                    <button class="btn btn-secondary" onclick="logout()">Salir</button>
                 </div>
             </div>
 
-            <!-- KPI CARDS -->
-            <div class="kpi-grid">
+            <div class="kpi-grid" id="kpiGrid">
                 <div class="kpi-card coral">
-                    <div class="kpi-header">
-                        <div>
-                            <div class="kpi-label">Gasto Total</div>
-                            <div class="kpi-value" id="kpiGasto">€0,00</div>
-                        </div>
-                        <div class="kpi-icon">💸</div>
-                    </div>
-                    <div class="kpi-desc">acumulados</div>
+                    <div class="kpi-label">Gasto Total</div>
+                    <div class="kpi-value" id="kpiGasto">€0</div>
                 </div>
-
-                <div class="kpi-card blue">
-                    <div class="kpi-header">
-                        <div>
-                            <div class="kpi-label">Leads Totales</div>
-                            <div class="kpi-value" id="kpiLeads">0</div>
-                        </div>
-                        <div class="kpi-icon">🎯</div>
-                    </div>
-                    <div class="kpi-desc">Formularios enviados</div>
-                </div>
-
-                <div class="kpi-card warn">
-                    <div class="kpi-header">
-                        <div>
-                            <div class="kpi-label">CPL Medio</div>
-                            <div class="kpi-value" id="kpiCPL">€0,00</div>
-                        </div>
-                        <div class="kpi-icon">📊</div>
-                    </div>
-                    <div class="kpi-desc">Coste por lead</div>
-                </div>
-
                 <div class="kpi-card green">
-                    <div class="kpi-header">
-                        <div>
-                            <div class="kpi-label">Agendas</div>
-                            <div class="kpi-value" id="kpiAgendas">0</div>
-                        </div>
-                        <div class="kpi-icon">📅</div>
-                    </div>
-                    <div class="kpi-desc">Confirmadas en GHL</div>
+                    <div class="kpi-label">Leads</div>
+                    <div class="kpi-value" id="kpiLeads">0</div>
                 </div>
-
+                <div class="kpi-card blue">
+                    <div class="kpi-label">CPL Medio</div>
+                    <div class="kpi-value" id="kpiCpl">€0</div>
+                </div>
                 <div class="kpi-card purple">
-                    <div class="kpi-header">
-                        <div>
-                            <div class="kpi-label">€/Agenda Media</div>
-                            <div class="kpi-value" id="kpiCPA">€0,00</div>
-                        </div>
-                        <div class="kpi-icon">💰</div>
-                    </div>
-                    <div class="kpi-desc">Coste por cita</div>
+                    <div class="kpi-label">Agendas</div>
+                    <div class="kpi-value" id="kpiAgendas">0</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">CPA Medio</div>
+                    <div class="kpi-value" id="kpiCpa">€0</div>
                 </div>
             </div>
 
-            <!-- ACTION BUTTONS -->
-            <div class="actions-bar">
-                <button class="btn btn-primary" onclick="openAddModal()">➕ Añadir Anuncio</button>
-                <button class="btn btn-secondary" onclick="exportCSV()">📥 Exportar CSV</button>
-                <button class="btn btn-secondary" onclick="importCSV()">📤 Importar CSV</button>
-            </div>
-
-            <!-- FILTERS & SORTING -->
-            <div class="filters-section">
-                <div class="filter-group">
-                    <div class="group-label">Mostrar</div>
-                    <div class="pill-buttons">
-                        <button class="pill active" onclick="setFilter('all')">Todos</button>
-                        <button class="pill" onclick="setFilter('with-agendas')">Con agendas ✅</button>
-                        <button class="pill" onclick="setFilter('without-agendas')">Sin agendas</button>
+            <div class="controls">
+                <div class="control-section">
+                    <label class="control-label">Filtrar por leads</label>
+                    <div class="pills">
+                        <button class="pill active" onclick="setFilter('todos')">Todos</button>
+                        <button class="pill" onclick="setFilter('conLeads')">Con leads</button>
+                        <button class="pill" onclick="setFilter('sinLeads')">Sin leads</button>
                     </div>
                 </div>
-
-                <div class="sort-group">
-                    <div class="group-label">Ordenar</div>
-                    <div class="pill-buttons">
-                        <button class="pill" onclick="setSortBy('gasto', 'desc')">Gasto ↓</button>
-                        <button class="pill" onclick="setSortBy('leads', 'desc')">Leads ↓</button>
-                        <button class="pill" onclick="setSortBy('cpl', 'asc')">CPL ↑</button>
-                        <button class="pill" onclick="setSortBy('agendas', 'desc')">Agendas ↓</button>
-                        <button class="pill" onclick="setSortBy('cpa', 'asc')">€/Agenda ↑</button>
+                <div class="control-section">
+                    <label class="control-label">Ordenar por</label>
+                    <div class="pills">
+                        <button class="pill" onclick="setSort('gastoUp')">Gasto ↑</button>
+                        <button class="pill" onclick="setSort('gastoDown')">Gasto ↓</button>
+                        <button class="pill" onclick="setSort('cplUp')">CPL ↑</button>
+                        <button class="pill" onclick="setSort('cplDown')">CPL ↓</button>
+                        <button class="pill" onclick="setSort('leadsDown')">Leads ↓</button>
                     </div>
                 </div>
             </div>
 
-            <!-- TABLE -->
             <div class="table-container">
-                <div class="table-header">
-                    <span id="tableCount">0 anuncios</span>
-                </div>
-                <table>
+                <table id="dataTable">
                     <thead>
                         <tr>
-                            <th>Nombre</th>
+                            <th>Anuncio</th>
                             <th>Gasto €</th>
                             <th>Leads</th>
-                            <th>CPL</th>
+                            <th>CPL €</th>
                             <th>Agendas</th>
                             <th>€/Agenda</th>
+                            <th>Clics</th>
+                            <th>Impresiones</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
+                        <tr>
+                            <td colspan="9" style="text-align: center;">
+                                <div class="loading">
+                                    <div class="spinner"></div>
+                                    <p>Cargando datos...</p>
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
 
-            <!-- CHART -->
             <div class="chart-container">
-                <div class="chart-title">Costo por Agenda (CPA) - Anuncios con Agendas</div>
-                <canvas id="adsChart"></canvas>
-                <div class="chart-legend">
-                    <div class="legend-item">
-                        <div class="legend-color legend-green"></div>
-                        <span>&lt;€40 (óptimo)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color legend-yellow"></div>
-                        <span>€40–€80 (aceptable)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color legend-red"></div>
-                        <span>&gt;€80 (alto)</span>
-                    </div>
-                </div>
+                <h3>Top 10 Anuncios por Leads</h3>
+                <canvas id="leadsChart"></canvas>
             </div>
-        </main>
+        </div>
     </div>
 
-    <!-- MODAL -->
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal">
-            <h2 id="modalTitle">Añadir Anuncio</h2>
+    <div class="modal" id="addModal">
+        <div class="modal-content">
+            <div class="modal-header" id="modalTitle">Nuevo Anuncio</div>
             <form id="adForm" onsubmit="saveAd(event)">
                 <div class="form-group">
                     <label>Nombre</label>
-                    <input type="text" id="formNombre" required />
+                    <input type="text" id="formAnuncio" required />
                 </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Gasto €</label>
-                        <input type="number" id="formGasto" step="0.01" required />
-                    </div>
-                    <div class="form-group">
-                        <label>Leads</label>
-                        <input type="number" id="formLeads" min="0" integer required />
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Agendas</label>
-                        <input type="number" id="formAgendas" min="0" integer required />
-                    </div>
-                    <div class="form-group">
-                        <label>CPL (Auto)</label>
-                        <div class="calc-display" id="cplDisplay">€0,00</div>
-                    </div>
-                </div>
-
                 <div class="form-group">
-                    <label>€/Agenda (Auto)</label>
-                    <div class="calc-display" id="cpaDisplay">€0,00</div>
+                    <label>Gasto (€)</label>
+                    <input type="number" id="formGasto" step="0.01" required />
                 </div>
-
-                <div class="modal-buttons">
-                    <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
+                <div class="form-group">
+                    <label>Leads</label>
+                    <input type="number" id="formLeads" step="1" required />
+                </div>
+                <div class="form-group">
+                    <label>Agendas</label>
+                    <input type="number" id="formAgendas" step="1" required />
+                </div>
+                <div class="form-group">
+                    <label>Clics</label>
+                    <input type="number" id="formClics" step="1" value="0" />
+                </div>
+                <div class="form-group">
+                    <label>Impresiones</label>
+                    <input type="number" id="formImpresiones" step="1" value="0" />
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeAddModal()">Cancelar</button>
                     <button type="submit" class="btn-primary">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- HIDDEN FILE INPUT -->
-    <input type="file" id="csvFileInput" accept=".csv" onchange="handleFileUpload(event)" />
-
     <script>
-        // ===== DATA & STATE =====
-        const DEFAULT_DATA = [
-            {nombre:'7 HOMBRES + 30 AÑOS',gasto:11.55,leads:1,cpl:11.55,agendas:1,cpa:11.55},
-            {nombre:'busco 5 dejar de arrastrarse',gasto:19.01,leads:4,cpl:4.75,agendas:1,cpa:19.01},
-            {nombre:'testimonio aitor',gasto:24.75,leads:4,cpl:6.19,agendas:1,cpa:24.75},
-            {nombre:'7 mujeres +30 años (×2 adsets)',gasto:251.89,leads:32,cpl:7.87,agendas:9,cpa:27.99},
-            {nombre:'busco 5 que quieran disfrutar',gasto:76.04,leads:12,cpl:6.34,agendas:2,cpa:38.02},
-            {nombre:'xim abc cuantificación',gasto:104.46,leads:9,cpl:11.61,agendas:2,cpa:52.23},
-            {nombre:'bernat sufrir subidas',gasto:210.08,leads:23,cpl:9.13,agendas:4,cpa:52.52},
-            {nombre:'dejar excusas y empezar',gasto:57.55,leads:3,cpl:19.18,agendas:1,cpa:57.55},
-            {nombre:'busco 5',gasto:198.28,leads:15,cpl:13.22,agendas:3,cpa:66.09},
-            {nombre:'si no entrenas fuerza (×3 adsets)',gasto:504.18,leads:43,cpl:11.73,agendas:6,cpa:84.03},
-            {nombre:'testimonio jon + eva',gasto:166.20,leads:12,cpl:13.85,agendas:1,cpa:166.20},
-            {nombre:'abro 5 plazas',gasto:149.05,leads:13,cpl:11.47,agendas:0,cpa:null},
-            {nombre:'Km 35 formato dibujo',gasto:88.76,leads:11,cpl:8.07,agendas:0,cpa:null},
-            {nombre:'Eres corredor o trail runner?',gasto:78.54,leads:5,cpl:15.71,agendas:0,cpa:null},
-            {nombre:'Vall de Aran',gasto:39.70,leads:1,cpl:39.70,agendas:0,cpa:null},
-            {nombre:'5 CORREDORES quieran dejar de sufrir',gasto:33.06,leads:3,cpl:11.02,agendas:0,cpa:null},
-            {nombre:'10 corredores preparar su próxima carrera',gasto:30.28,leads:1,cpl:30.28,agendas:0,cpa:null},
-            {nombre:'Xim cada vez + cansado',gasto:22.26,leads:2,cpl:11.13,agendas:0,cpa:null},
-            {nombre:'km 35 estatica Real',gasto:19.08,leads:4,cpl:4.77,agendas:0,cpa:null},
-            {nombre:'Trailrunner cuando la subida es dura',gasto:12.27,leads:2,cpl:6.14,agendas:0,cpa:null},
-            {nombre:'10 corredores preparar su próxima carrera - Copy',gasto:9.33,leads:1,cpl:9.33,agendas:0,cpa:null},
-            {nombre:'corredor vas al gym sin saber que hacer',gasto:3.20,leads:0,cpl:null,agendas:0,cpa:null},
-            {nombre:'cansado de hacerlo todo bien y estar estancado',gasto:1.08,leads:0,cpl:null,agendas:0,cpa:null},
-            {nombre:'plazas exclusivas (×2 adsets)',gasto:1.02,leads:0,cpl:null,agendas:0,cpa:null},
-            {nombre:'corredor cansado de llevar tiempo sin mejorar',gasto:0.83,leads:0,cpl:null,agendas:0,cpa:null}
-        ];
-
-        let ads = [];
-        let currentFilter = 'all';
-        let currentSort = { field: null, direction: null };
-        let editingIndex = null;
-        let chart = null;
-
-        // PASSWORD HASH
+        const AIRTABLE_BASE = 'appYJG2yB0mirwr8C';
+        const AIRTABLE_TABLE = 'tblnwcn7i7a3XZu1A';
+        const AIRTABLE_TOKEN = 'patCbAOuXkQUOhKmQ.b2c1e1c64fa31e879b9eece4faa0b33c6ee0c498c1847bbf22e1bd38d73ba106';
         const PASSWORD_HASH = 'e4a114787a29c3be3b795ae110cb790eec0299c6ef259cc03881e8a7ba791d49';
 
-        // ===== PASSWORD VERIFICATION =====
-        async function hashPassword(password) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(password);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        let allRecords = [];
+        let filteredRecords = [];
+        let currentFilter = 'todos';
+        let currentSort = null;
+        let editingRecordId = null;
+        let leadsChart = null;
+
+        async function sha256(str) {
+            const buffer = new TextEncoder().encode(str);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
         async function checkPassword() {
             const password = document.getElementById('passwordInput').value;
-            const hash = await hashPassword(password);
-            
+            const hash = await sha256(password);
             if (hash === PASSWORD_HASH) {
-                document.body.classList.remove('locked');
-                document.getElementById('lockScreen').classList.add('hidden');
-                initDashboard();
+                localStorage.setItem('authenticated', 'true');
+                showDashboard();
+                refreshData();
+                setInterval(refreshData, 5 * 60 * 1000);
             } else {
-                document.getElementById('lockError').style.display = 'block';
-                document.getElementById('passwordInput').value = '';
+                document.getElementById('loginError').textContent = 'Contraseña incorrecta';
+                document.getElementById('loginError').style.display = 'block';
             }
         }
 
-        document.getElementById('passwordInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') checkPassword();
-        });
-
-        // ===== INITIALIZATION =====
-        function initDashboard() {
-            loadData();
-            renderTable();
-            updateKPIs();
-            updateChart();
+        function showDashboard() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainContainer').style.display = 'flex';
         }
 
-        function loadData() {
-            const stored = localStorage.getItem('metaAdsData');
-            if (stored) {
-                ads = JSON.parse(stored);
-            } else {
-                ads = JSON.parse(JSON.stringify(DEFAULT_DATA));
-                saveData();
+        function logout() {
+            localStorage.removeItem('authenticated');
+            location.reload();
+        }
+
+        async function refreshData() {
+            try {
+                const records = await fetchAllRecords();
+                allRecords = records;
+                applyFiltersAndSort();
+                updateKPIs();
+                renderTable();
+                renderChart();
+                updateLastUpdate();
+            } catch (error) {
+                console.error('Error refreshing data:', error);
             }
         }
 
-        function saveData() {
-            localStorage.setItem('metaAdsData', JSON.stringify(ads));
-        }
+        async function fetchAllRecords() {
+            let allRecs = [];
+            let offset = null;
 
-        // ===== FORMATTING =====
-        function formatCurrency(value) {
-            if (value === null || value === undefined) return '—';
-            return new Intl.NumberFormat('es-ES', {
-                style: 'currency',
-                currency: 'EUR',
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }).format(value);
-        }
+            do {
+                let url = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}`;
+                if (offset) url += `?offset=${offset}`;
 
-        function getCostClass(value) {
-            if (value === null || value === undefined) return 'cost-dash';
-            if (value < 40) return 'cost-green';
-            if (value <= 80) return 'cost-yellow';
-            return 'cost-red';
-        }
-
-        // ===== FILTERING & SORTING =====
-        function setFilter(filter) {
-            currentFilter = filter;
-            document.querySelectorAll('.filter-group .pill').forEach((pill, idx) => {
-                pill.classList.toggle('active', 
-                    (idx === 0 && filter === 'all') ||
-                    (idx === 1 && filter === 'with-agendas') ||
-                    (idx === 2 && filter === 'without-agendas')
-                );
-            });
-            renderTable();
-        }
-
-        function setSortBy(field, direction) {
-            currentSort = { field, direction };
-            document.querySelectorAll('.sort-group .pill').forEach(p => p.classList.remove('active'));
-            event.target.classList.add('active');
-            renderTable();
-        }
-
-        function getFilteredAds() {
-            let result = ads;
-            if (currentFilter === 'with-agendas') {
-                result = result.filter(ad => ad.agendas > 0);
-            } else if (currentFilter === 'without-agendas') {
-                result = result.filter(ad => ad.agendas === 0);
-            }
-
-            if (currentSort.field) {
-                result.sort((a, b) => {
-                    const aVal = a[currentSort.field];
-                    const bVal = b[currentSort.field];
-                    
-                    if (aVal === null || aVal === undefined) return 1;
-                    if (bVal === null || bVal === undefined) return -1;
-                    
-                    const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
-                    return currentSort.direction === 'asc' ? comparison : -comparison;
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${AIRTABLE_TOKEN}` }
                 });
-            }
 
-            return result;
+                if (!response.ok) throw new Error(`API error: ${response.status}`);
+
+                const data = await response.json();
+                allRecs = allRecs.concat(data.records || []);
+                offset = data.offset;
+            } while (offset);
+
+            return allRecs;
         }
 
-        // ===== TABLE RENDERING =====
+        function applyFiltersAndSort() {
+            let filtered = [...allRecords];
+
+            if (currentFilter === 'conLeads') {
+                filtered = filtered.filter(r => (r.fields['Leads'] || 0) > 0);
+            } else if (currentFilter === 'sinLeads') {
+                filtered = filtered.filter(r => (r.fields['Leads'] || 0) === 0);
+            }
+
+            if (currentSort === 'gastoUp') {
+                filtered.sort((a, b) => (a.fields['Gasto'] || 0) - (b.fields['Gasto'] || 0));
+            } else if (currentSort === 'gastoDown') {
+                filtered.sort((a, b) => (b.fields['Gasto'] || 0) - (a.fields['Gasto'] || 0));
+            } else if (currentSort === 'cplUp') {
+                filtered.sort((a, b) => (a.fields['CPL'] || 0) - (b.fields['CPL'] || 0));
+            } else if (currentSort === 'cplDown') {
+                filtered.sort((a, b) => (b.fields['CPL'] || 0) - (a.fields['CPL'] || 0));
+            } else if (currentSort === 'leadsDown') {
+                filtered.sort((a, b) => (b.fields['Leads'] || 0) - (a.fields['Leads'] || 0));
+            }
+
+            filteredRecords = filtered;
+        }
+
+        function updateKPIs() {
+            const totalGasto = allRecords.reduce((sum, r) => sum + (r.fields['Gasto'] || 0), 0);
+            const totalLeads = allRecords.reduce((sum, r) => sum + (r.fields['Leads'] || 0), 0);
+            const cplMedio = totalLeads > 0 ? totalGasto / totalLeads : 0;
+            const totalAgendas = allRecords.reduce((sum, r) => sum + (r.fields['Agendas'] || 0), 0);
+            const cpaMedio = totalAgendas > 0 ? totalGasto / totalAgendas : 0;
+
+            document.getElementById('kpiGasto').textContent = totalGasto.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
+            document.getElementById('kpiLeads').textContent = totalLeads.toLocaleString('es-ES');
+            document.getElementById('kpiCpl').textContent = cplMedio.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
+            document.getElementById('kpiAgendas').textContent = totalAgendas.toLocaleString('es-ES');
+            document.getElementById('kpiCpa').textContent = cpaMedio.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
+        }
+
         function renderTable() {
-            const filtered = getFilteredAds();
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
 
-            filtered.forEach((ad, idx) => {
-                const originalIdx = ads.indexOf(ad);
+            filteredRecords.forEach(record => {
+                const fields = record.fields;
+                const gasto = fields['Gasto'] || 0;
+                const leads = fields['Leads'] || 0;
+                const cpl = fields['CPL'] || 0;
+                const agendas = fields['Agendas'] || 0;
+                const cpa = fields['CPA'] || 0;
+                const clics = fields['Clics'] || 0;
+                const impresiones = fields['Impresiones'] || 0;
+
+                let cplClass = 'cpl-green';
+                if (cpl >= 20) cplClass = 'cpl-red';
+                else if (cpl >= 10) cplClass = 'cpl-yellow';
+
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${ad.nombre}</td>
-                    <td>${formatCurrency(ad.gasto)}</td>
-                    <td>${ad.leads}</td>
-                    <td class="${getCostClass(ad.cpl)}">${formatCurrency(ad.cpl)}</td>
+                    <td><strong>${fields['Anuncio'] || 'Sin nombre'}</strong></td>
+                    <td>${gasto.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</td>
+                    <td>${leads.toLocaleString('es-ES')}</td>
+                    <td><div class="cpl-cell ${cplClass}">${cpl.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</div></td>
+                    <td>${agendas.toLocaleString('es-ES')}</td>
+                    <td>${cpa.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</td>
+                    <td>${clics.toLocaleString('es-ES')}</td>
+                    <td>${impresiones.toLocaleString('es-ES')}</td>
                     <td>
-                        ${ad.agendas > 0 ? `<span class="badge">${ad.agendas} ✅</span>` : ad.agendas}
-                    </td>
-                    <td class="${getCostClass(ad.cpa)}">${formatCurrency(ad.cpa)}</td>
-                    <td>
-                        <div class="actions-cell">
-                            <button class="btn-icon" onclick="openEditModal(${originalIdx})" title="Editar">✏️</button>
-                            <button class="btn-icon delete" onclick="deleteAd(${originalIdx})" title="Eliminar">🗑️</button>
+                        <div class="actions">
+                            <button class="action-btn action-edit" onclick="editRecord('${record.id}')">Editar</button>
+                            <button class="action-btn action-delete" onclick="deleteRecord('${record.id}')">Borrar</button>
                         </div>
                     </td>
                 `;
                 tbody.appendChild(row);
             });
-
-            document.getElementById('tableCount').textContent = `${filtered.length} anuncio${filtered.length !== 1 ? 's' : ''}`;
-            updateKPIs();
-            updateChart();
         }
 
-        // ===== KPI UPDATES =====
-        function updateKPIs() {
-            const filtered = getFilteredAds();
-            
-            const gasto = filtered.reduce((sum, ad) => sum + ad.gasto, 0);
-            const leads = filtered.reduce((sum, ad) => sum + ad.leads, 0);
-            const agendas = filtered.reduce((sum, ad) => sum + ad.agendas, 0);
-            
-            const cpl = leads > 0 ? gasto / leads : 0;
-            const cpa = agendas > 0 ? gasto / agendas : 0;
+        function renderChart() {
+            const top10 = [...allRecords]
+                .sort((a, b) => (b.fields['Leads'] || 0) - (a.fields['Leads'] || 0))
+                .slice(0, 10);
 
-            document.getElementById('kpiGasto').textContent = formatCurrency(gasto);
-            document.getElementById('kpiLeads').textContent = leads;
-            document.getElementById('kpiCPL').textContent = formatCurrency(cpl);
-            document.getElementById('kpiAgendas').textContent = agendas;
-            document.getElementById('kpiCPA').textContent = formatCurrency(cpa);
-        }
+            const labels = top10.map(r => r.fields['Anuncio'] || 'Sin nombre');
+            const data = top10.map(r => r.fields['Leads'] || 0);
 
-        // ===== CHART =====
-        function updateChart() {
-            const withAgendas = ads.filter(ad => ad.agendas > 0)
-                .sort((a, b) => (a.cpa || Infinity) - (b.cpa || Infinity));
+            const ctx = document.getElementById('leadsChart').getContext('2d');
 
-            const labels = withAgendas.map(ad => ad.nombre);
-            const data = withAgendas.map(ad => ad.cpa);
-            const colors = withAgendas.map(ad => {
-                if (ad.cpa < 40) return 'rgba(81, 207, 102, 0.7)';
-                if (ad.cpa <= 80) return 'rgba(255, 169, 77, 0.7)';
-                return 'rgba(255, 107, 107, 0.7)';
-            });
+            if (leadsChart) leadsChart.destroy();
 
-            const ctx = document.getElementById('adsChart').getContext('2d');
-            
-            if (chart) chart.destroy();
-            
-            chart = new Chart(ctx, {
+            leadsChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: '€/Agenda (CPA)',
+                        label: 'Leads',
                         data: data,
-                        backgroundColor: colors,
-                        borderColor: colors.map(c => c.replace('0.7', '1')),
-                        borderWidth: 1,
-                        borderRadius: 6
+                        backgroundColor: '#FF6248',
+                        borderColor: '#E8503A',
+                        borderWidth: 1
                     }]
                 },
                 options: {
                     indexAxis: 'y',
                     responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                            padding: 12,
-                            cornerRadius: 6,
-                            callbacks: {
-                                title: (context) => context[0].label,
-                                label: (context) => {
-                                    const ad = withAgendas[context.dataIndex];
-                                    return [
-                                        `€/Agenda: ${formatCurrency(ad.cpa)}`,
-                                        `Agendas: ${ad.agendas}`,
-                                        `Gasto: ${formatCurrency(ad.gasto)}`,
-                                        `Leads: ${ad.leads}`
-                                    ];
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                            ticks: { color: 'rgba(255, 255, 255, 0.5)' }
-                        },
-                        y: {
-                            grid: { display: false },
-                            ticks: { color: 'rgba(255, 255, 255, 0.7)', font: { size: 11 } }
-                        }
-                    }
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true } }
                 }
             });
         }
 
-        // ===== MODAL OPERATIONS =====
+        function updateLastUpdate() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('lastUpdate').textContent = `Última actualización: ${hours}:${minutes}`;
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.control-section:first-child .pill').forEach((p, i) => {
+                p.classList.remove('active');
+                if ((i === 0 && filter === 'todos') || (i === 1 && filter === 'conLeads') || (i === 2 && filter === 'sinLeads')) {
+                    p.classList.add('active');
+                }
+            });
+            applyFiltersAndSort();
+            renderTable();
+        }
+
+        function setSort(sort) {
+            currentSort = sort;
+            document.querySelectorAll('.control-section:last-child .pill').forEach(p => p.classList.remove('active'));
+            event.target.classList.add('active');
+            applyFiltersAndSort();
+            renderTable();
+        }
+
         function openAddModal() {
-            editingIndex = null;
-            document.getElementById('modalTitle').textContent = 'Añadir Anuncio';
+            editingRecordId = null;
+            document.getElementById('modalTitle').textContent = 'Nuevo Anuncio';
             document.getElementById('adForm').reset();
-            document.getElementById('modalOverlay').classList.remove('hidden');
-            document.getElementById('formNombre').focus();
+            document.getElementById('addModal').classList.add('active');
         }
 
-        function openEditModal(idx) {
-            editingIndex = idx;
-            const ad = ads[idx];
+        function closeAddModal() {
+            document.getElementById('addModal').classList.remove('active');
+            editingRecordId = null;
+        }
+
+        function editRecord(recordId) {
+            const record = allRecords.find(r => r.id === recordId);
+            if (!record) return;
+
+            editingRecordId = recordId;
             document.getElementById('modalTitle').textContent = 'Editar Anuncio';
-            document.getElementById('formNombre').value = ad.nombre;
-            document.getElementById('formGasto').value = ad.gasto;
-            document.getElementById('formLeads').value = ad.leads;
-            document.getElementById('formAgendas').value = ad.agendas;
-            updateCalcs();
-            document.getElementById('modalOverlay').classList.remove('hidden');
+            document.getElementById('formAnuncio').value = record.fields['Anuncio'] || '';
+            document.getElementById('formGasto').value = record.fields['Gasto'] || 0;
+            document.getElementById('formLeads').value = record.fields['Leads'] || 0;
+            document.getElementById('formAgendas').value = record.fields['Agendas'] || 0;
+            document.getElementById('formClics').value = record.fields['Clics'] || 0;
+            document.getElementById('formImpresiones').value = record.fields['Impresiones'] || 0;
+            document.getElementById('addModal').classList.add('active');
         }
 
-        function closeModal() {
-            document.getElementById('modalOverlay').classList.add('hidden');
-            document.getElementById('adForm').reset();
-            editingIndex = null;
-        }
+        async function saveAd(event) {
+            event.preventDefault();
 
-        document.getElementById('modalOverlay').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('modalOverlay')) closeModal();
-        });
-
-        function updateCalcs() {
+            const anuncio = document.getElementById('formAnuncio').value;
             const gasto = parseFloat(document.getElementById('formGasto').value) || 0;
             const leads = parseInt(document.getElementById('formLeads').value) || 0;
             const agendas = parseInt(document.getElementById('formAgendas').value) || 0;
+            const clics = parseInt(document.getElementById('formClics').value) || 0;
+            const impresiones = parseInt(document.getElementById('formImpresiones').value) || 0;
 
             const cpl = leads > 0 ? gasto / leads : 0;
             const cpa = agendas > 0 ? gasto / agendas : 0;
 
-            document.getElementById('cplDisplay').textContent = formatCurrency(cpl);
-            document.getElementById('cpaDisplay').textContent = formatCurrency(cpa);
-        }
-
-        document.getElementById('formGasto').addEventListener('input', updateCalcs);
-        document.getElementById('formLeads').addEventListener('input', updateCalcs);
-        document.getElementById('formAgendas').addEventListener('input', updateCalcs);
-
-        function saveAd(e) {
-            e.preventDefault();
-            const nombre = document.getElementById('formNombre').value;
-            const gasto = parseFloat(document.getElementById('formGasto').value);
-            const leads = parseInt(document.getElementById('formLeads').value);
-            const agendas = parseInt(document.getElementById('formAgendas').value);
-
-            const cpl = leads > 0 ? gasto / leads : null;
-            const cpa = agendas > 0 ? gasto / agendas : null;
-
-            const ad = { nombre, gasto, leads, cpl, agendas, cpa };
-
-            if (editingIndex !== null) {
-                ads[editingIndex] = ad;
-            } else {
-                ads.push(ad);
-            }
-
-            saveData();
-            closeModal();
-            renderTable();
-        }
-
-        function deleteAd(idx) {
-            if (confirm('¿Eliminar este anuncio?')) {
-                ads.splice(idx, 1);
-                saveData();
-                renderTable();
-            }
-        }
-
-        // ===== CSV OPERATIONS =====
-        function exportCSV() {
-            const headers = ['Nombre', 'Gasto €', 'Leads', 'CPL', 'Agendas', '€/Agenda'];
-            const rows = ads.map(ad => [
-                ad.nombre,
-                ad.gasto,
-                ad.leads,
-                ad.cpl !== null ? ad.cpl : '',
-                ad.agendas,
-                ad.cpa !== null ? ad.cpa : ''
-            ]);
-
-            const csv = [headers, ...rows]
-                .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-                .join('\n');
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `ads_${new Date().toISOString().split('T')[0]}.csv`;
-            link.click();
-        }
-
-        function importCSV() {
-            document.getElementById('csvFileInput').click();
-        }
-
-        function handleFileUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const csv = event.target.result;
-                const lines = csv.split('\n').filter(line => line.trim());
-                if (lines.length < 2) {
-                    alert('Archivo CSV inválido');
-                    return;
-                }
-
-                const newAds = [];
-                for (let i = 1; i < lines.length; i++) {
-                    const cols = parseCSVLine(lines[i]);
-                    if (cols.length < 6) continue;
-
-                    const ad = {
-                        nombre: cols[0],
-                        gasto: parseFloat(cols[1]) || 0,
-                        leads: parseInt(cols[2]) || 0,
-                        cpl: cols[3] ? parseFloat(cols[3]) : null,
-                        agendas: parseInt(cols[4]) || 0,
-                        cpa: cols[5] ? parseFloat(cols[5]) : null
-                    };
-                    newAds.push(ad);
-                }
-
-                ads = newAds;
-                saveData();
-                renderTable();
-                document.getElementById('csvFileInput').value = '';
+            const fields = {
+                'Anuncio': anuncio,
+                'Gasto': gasto,
+                'Leads': leads,
+                'CPL': cpl,
+                'Agendas': agendas,
+                'CPA': cpa,
+                'Clics': clics,
+                'Impresiones': impresiones,
+                'Última actualización': new Date().toISOString()
             };
-            reader.readAsText(file);
-        }
 
-        function parseCSVLine(line) {
-            const result = [];
-            let current = '';
-            let inQuotes = false;
-
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-                if (char === '"') {
-                    inQuotes = !inQuotes;
-                } else if (char === ',' && !inQuotes) {
-                    result.push(current.trim());
-                    current = '';
+            try {
+                if (editingRecordId) {
+                    await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}/${editingRecordId}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ fields })
+                    });
                 } else {
-                    current += char;
+                    await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ records: [{ fields }] })
+                    });
                 }
+                closeAddModal();
+                refreshData();
+            } catch (error) {
+                console.error('Error saving ad:', error);
             }
-            result.push(current.trim());
-            return result;
         }
+
+        async function deleteRecord(recordId) {
+            if (!confirm('¿Confirmar eliminación?')) return;
+
+            try {
+                await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}/${recordId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${AIRTABLE_TOKEN}` }
+                });
+                refreshData();
+            } catch (error) {
+                console.error('Error deleting record:', error);
+            }
+        }
+
+        function exportCSV() {
+            let csv = 'Anuncio,Gasto (€),Leads,CPL (€),Agendas,CPA (€),Clics,Impresiones\n';
+            filteredRecords.forEach(r => {
+                const f = r.fields;
+                csv += `"${f['Anuncio'] || ''}",${f['Gasto'] || 0},${f['Leads'] || 0},${f['CPL'] || 0},${f['Agendas'] || 0},${f['CPA'] || 0},${f['Clics'] || 0},${f['Impresiones'] || 0}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ads_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('authenticated')) {
+                showDashboard();
+                refreshData();
+                setInterval(refreshData, 5 * 60 * 1000);
+            }
+        });
+
+        document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkPassword();
+        });
+
+        document.getElementById('addModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('addModal')) closeAddModal();
+        });
     </script>
 </body>
 </html>
