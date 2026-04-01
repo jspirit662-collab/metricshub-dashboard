@@ -546,20 +546,7 @@ def get_airtable():
             offset = data.get("offset")
             if not offset:
                 break
-        groups = {"base": 0, "perf": 0, "elite": 0, "other": 0}
-        clients = []
-        for rec in all_records:
-            f = rec.get("fields", {})
-            nombre = f.get("Nombre") or f.get("Name") or "—"
-            grupo_raw = (f.get("Grupo") or f.get("Plan") or "")
-            gl = grupo_raw.lower()
-            if "elite" in gl: groups["elite"] += 1
-            elif any(x in gl for x in ["performance","perf","pro"]): groups["perf"] += 1
-            elif any(x in gl for x in ["base","basic","starter"]): groups["base"] += 1
-            else: groups["other"] += 1
-            clients.append({"nombre": nombre, "grupo": grupo_raw or "Sin grupo",
-                            "estado": f.get("Estado") or "Activo"})
-        return jsonify({"total": len(all_records), "groups": groups, "clients": clients[:50]})
+        return jsonify({"records": all_records})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
