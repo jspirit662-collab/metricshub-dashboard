@@ -504,8 +504,12 @@
         const TP_BASE = 'app8nkARmupm6hbW1';
         const TP_TABLE = 'tblvf2b3sj8KReZVW';
 
+        const LLAMADAS_BASE = 'appYJG2yB0mirwr8C';
+        const LLAMADAS_TABLE = 'tbl2Q6YsLvzsZazNc';
+
         // ===== STATE =====
-        let adsRecords = [], stripeRecords = [], tpRecords = [];
+        let adsRecords = [], stripeRecords = [], tpRecords = [], llamadasRecords = [];
+        let agendasPorAnuncio = {};
         let adsFilter = 'todos', adsSort = null;
         let stripeFilter = 'todos';
         let tpFilter = 'todos';
@@ -569,7 +573,16 @@
 
         async function refreshAds() {
             try {
-                adsRecords = await fetchTable(ADS_BASE, ADS_TABLE);
+                [adsRecords, llamadasRecords] = await Promise.all([
+                    fetchTable(ADS_BASE, ADS_TABLE),
+                    fetchTable(LLAMADAS_BASE, LLAMADAS_TABLE)
+                ]);
+                // Calcular agendas reales por anuncio via UTM Content
+                agendasPorAnuncio = {};
+                llamadasRecords.forEach(r => {
+                    const utm = (r.fields['UTM Content'] || '').trim().toLowerCase();
+                    if (utm) agendasPorAnuncio[utm] = (agendasPorAnuncio[utm] || 0) + 1;
+                });
                 updateAdsKPIs(); renderAdsTable(); renderAdsChart();
                 updateTimestamp('adsUpdate');
             } catch(e) { console.error('Ads error:', e); }
@@ -608,10 +621,17 @@
         }
 
         // ===== ADS =====
+        function getAgendasForAd(nombreAnuncio) {
+            const key = (nombreAnuncio || '').trim().toLowerCase();
+            return agendasPorAnuncio[key] || 0;
+        }
+
         function updateAdsKPIs() {
             const g = adsRecords.reduce((s,r) => s + (r.fields['Gasto €']||r.fields['Gasto']||0), 0);
             const l = adsRecords.reduce((s,r) => s + (r.fields['Leads']||0), 0);
-            const a = adsRecords.reduce((s,r) => s + (r.fields['Agendas']||0), 0);
+            const a = llamadasRecords.length > 0
+                ? Object.values(agendasPorAnuncio).reduce((s,v) => s+v, 0)
+                : adsRecords.reduce((s,r) => s + (r.fields['Agendas']||0), 0);
             document.getElementById('kpiAdsGasto').textContent = eur(g);
             document.getElementById('kpiAdsLeads').textContent = num(l);
             document.getElementById('kpiAdsCpl').textContent = eur(l>0?g/l:0);
@@ -655,8 +675,9 @@
                 const g = f['Gasto €']||f['Gasto']||0;
                 const l = f['Leads']||0;
                 const cpl = f['CPL €']||f['CPL']||0;
-                const a = f['Agendas']||0;
-                const cpa = f['CPA €']||f['CPA']||0;
+                const a = llamadasRecords.length > 0 ? getAgendasForAd(f['Anuncio']) : (f['Agendas']||0);
+                const g_val = f['Gasto €']||f['Gasto']||0;
+                const cpa = a > 0 ? g_val / a : 0;
                 const cl = f['Clics']||0;
                 const imp = f['Impresiones']||0;
                 let cls = 'cpl-green';
