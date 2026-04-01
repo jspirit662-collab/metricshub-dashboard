@@ -269,6 +269,18 @@
         </div>
 
         <div class="content">
+            <!-- ====== BARRA DE FECHAS GLOBAL ====== -->
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px;background:#fff;border-bottom:1px solid #eee;position:sticky;top:0;z-index:100">
+                <span style="font-size:13px;font-weight:600;color:#555">Período:</span>
+                <button class="pill date-preset active" data-preset="todo" onclick="setDatePreset('todo')">Todo</button>
+                <button class="pill date-preset" data-preset="hoy" onclick="setDatePreset('hoy')">Hoy</button>
+                <button class="pill date-preset" data-preset="semana" onclick="setDatePreset('semana')">Esta semana</button>
+                <button class="pill date-preset" data-preset="mes" onclick="setDatePreset('mes')">Este mes</button>
+                <button class="pill date-preset" data-preset="30d" onclick="setDatePreset('30d')">Últimos 30d</button>
+                <input type="date" id="dateFrom" onchange="onDateChange()" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px">
+                <span style="font-size:13px;color:#999">→</span>
+                <input type="date" id="dateTo" onchange="onDateChange()" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px">
+            </div>
 
             <!-- ====== OVERVIEW ====== -->
             <div class="section active" id="section-overview">
@@ -349,18 +361,6 @@
                 </div>
 
                 <div class="controls">
-                    <div class="control-section">
-                        <label class="control-label">Período (agendas)</label>
-                        <div class="pills" style="flex-wrap:wrap;gap:6px;align-items:center">
-                            <button class="pill date-preset" data-preset="hoy" onclick="setDatePreset('hoy')">Hoy</button>
-                            <button class="pill date-preset" data-preset="semana" onclick="setDatePreset('semana')">Esta semana</button>
-                            <button class="pill date-preset" data-preset="mes" onclick="setDatePreset('mes')">Este mes</button>
-                            <button class="pill date-preset" data-preset="30d" onclick="setDatePreset('30d')">Últimos 30d</button>
-                            <button class="pill date-preset active" data-preset="todo" onclick="setDatePreset('todo')">Todo</button>
-                            <input type="date" id="dateFrom" onchange="onDateChange()" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px">
-                            <input type="date" id="dateTo" onchange="onDateChange()" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px">
-                        </div>
-                    </div>
                     <div class="control-section">
                         <label class="control-label">Filtrar por leads</label>
                         <div class="pills" id="adsFilterPills">
@@ -521,7 +521,7 @@
 
         // ===== STATE =====
         let adsRecords = [], stripeRecords = [], tpRecords = [], llamadasRecords = [];
-        let agendasPorAnuncio = {};
+        let agendasPorAnuncio = {}, leadsPorAnuncio = {};
         let adsFilter = 'todos', adsSort = null;
         let stripeFilter = 'todos';
         let tpFilter = 'todos';
@@ -546,7 +546,7 @@
             document.getElementById('dateTo').value = fmt(to);
             document.querySelectorAll('.date-preset').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.date-preset').forEach(b => { if(b.dataset.preset===preset) b.classList.add('active'); });
-            recalcAgendas();
+            recalcFiltered();
         }
 
         function onDateChange() {
@@ -555,11 +555,12 @@
             dateFrom = f ? new Date(f + 'T00:00:00') : null;
             dateTo   = t ? new Date(t + 'T23:59:59') : null;
             document.querySelectorAll('.date-preset').forEach(b => b.classList.remove('active'));
-            recalcAgendas();
+            recalcFiltered();
         }
 
-        function recalcAgendas() {
+        function recalcFiltered() {
             agendasPorAnuncio = {};
+            leadsPorAnuncio = {};
             llamadasRecords.forEach(r => {
                 const utm = (r.fields['UTM Content'] || '').trim().toLowerCase();
                 if (!utm) return;
@@ -570,9 +571,15 @@
                     if (dateFrom && fecha < dateFrom) return;
                     if (dateTo && fecha > dateTo) return;
                 }
-                agendasPorAnuncio[utm] = (agendasPorAnuncio[utm] || 0) + 1;
+                leadsPorAnuncio[utm] = (leadsPorAnuncio[utm] || 0) + 1;
+                if ((r.fields['Realizada']||'').toLowerCase().includes('sí') ||
+                    (r.fields['Realizada']||'').toLowerCase().includes('si') ||
+                    !r.fields['Realizada']) {
+                    agendasPorAnuncio[utm] = (agendasPorAnuncio[utm] || 0) + 1;
+                }
             });
             updateAdsKPIs(); renderAdsTable();
+            updateStripeKPIs(); renderStripeTable(); renderStripeCharts();
         }
 
         // ===== AUTH =====
@@ -637,7 +644,7 @@
                     fetchTable(ADS_BASE, ADS_TABLE),
                     fetchTable(LLAMADAS_BASE, LLAMADAS_TABLE)
                 ]);
-                recalcAgendas();
+                recalcFiltered();
                 updateAdsKPIs(); renderAdsTable(); renderAdsChart();
                 updateTimestamp('adsUpdate');
             } catch(e) { console.error('Ads error:', e); }
@@ -676,6 +683,11 @@
         }
 
         // ===== ADS =====
+        function getLeadsForAd(nombreAnuncio) {
+            const key = (nombreAnuncio || '').trim().toLowerCase();
+            return leadsPorAnuncio[key] || 0;
+        }
+
         function getAgendasForAd(nombreAnuncio) {
             const key = (nombreAnuncio || '').trim().toLowerCase();
             return agendasPorAnuncio[key] || 0;
@@ -683,8 +695,11 @@
 
         function updateAdsKPIs() {
             const g = adsRecords.reduce((s,r) => s + (r.fields['Gasto €']||r.fields['Gasto']||0), 0);
-            const l = adsRecords.reduce((s,r) => s + (r.fields['Leads']||0), 0);
-            const a = llamadasRecords.length > 0
+            const useLlamadas = llamadasRecords.length > 0;
+            const l = useLlamadas
+                ? Object.values(leadsPorAnuncio).reduce((s,v) => s+v, 0)
+                : adsRecords.reduce((s,r) => s + (r.fields['Leads']||0), 0);
+            const a = useLlamadas
                 ? Object.values(agendasPorAnuncio).reduce((s,v) => s+v, 0)
                 : adsRecords.reduce((s,r) => s + (r.fields['Agendas']||0), 0);
             document.getElementById('kpiAdsGasto').textContent = eur(g);
@@ -728,10 +743,11 @@
             list.forEach(r => {
                 const f = r.fields;
                 const g = f['Gasto €']||f['Gasto']||0;
-                const l = f['Leads']||0;
-                const cpl = f['CPL €']||f['CPL']||0;
-                const a = llamadasRecords.length > 0 ? getAgendasForAd(f['Anuncio']) : (f['Agendas']||0);
+                const useLlamadas = llamadasRecords.length > 0;
+                const l = useLlamadas ? getLeadsForAd(f['Anuncio']) : (f['Leads']||0);
+                const a = useLlamadas ? getAgendasForAd(f['Anuncio']) : (f['Agendas']||0);
                 const g_val = f['Gasto €']||f['Gasto']||0;
+                const cpl = l > 0 ? g_val / l : 0;
                 const cpa = a > 0 ? g_val / a : 0;
                 const cl = f['Clics']||0;
                 const imp = f['Impresiones']||0;
@@ -759,9 +775,22 @@
         }
 
         // ===== STRIPE =====
+        function getFilteredStripe() {
+            return stripeRecords.filter(r => {
+                if (!dateFrom && !dateTo) return true;
+                const fechaStr = r.fields['Inicio suscripción'];
+                if (!fechaStr) return !dateFrom;
+                const fecha = new Date(fechaStr);
+                if (dateFrom && fecha < dateFrom) return false;
+                if (dateTo && fecha > dateTo) return false;
+                return true;
+            });
+        }
+
         function updateStripeKPIs() {
-            const activas = stripeRecords.filter(r => getStatus(r)==='Activa');
-            const impagos = stripeRecords.filter(r => getStatus(r)==='Impago');
+            const filtered = getFilteredStripe();
+            const activas = filtered.filter(r => getStatus(r)==='Activa');
+            const impagos = filtered.filter(r => getStatus(r)==='Impago');
             const totalRev = activas.reduce((s,r) => s + (r.fields['Importe €']||0), 0);
             const avg = activas.length>0 ? totalRev/activas.length : 0;
 
@@ -795,7 +824,7 @@
         function renderStripeTable() {
             const tbody = document.getElementById('stripeTableBody');
             const search = (document.getElementById('stripeSearch')?.value||'').toLowerCase();
-            let list = [...stripeRecords];
+            let list = [...getFilteredStripe()];
             if(stripeFilter==='activa') list = list.filter(r=>getStatus(r)==='Activa');
             if(stripeFilter==='impago') list = list.filter(r=>getStatus(r)==='Impago');
             if(search) list = list.filter(r => {
@@ -825,7 +854,7 @@
             // Plan distribution
             const planCounts = {};
             const planRevenue = {};
-            stripeRecords.filter(r=>getStatus(r)==='Activa').forEach(r => {
+            getFilteredStripe().filter(r=>getStatus(r)==='Activa').forEach(r => {
                 const plan = r.fields['Plan']||'Otro';
                 planCounts[plan] = (planCounts[plan]||0)+1;
                 planRevenue[plan] = (planRevenue[plan]||0)+(r.fields['Importe €']||0);
