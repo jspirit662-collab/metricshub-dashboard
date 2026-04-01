@@ -578,8 +578,10 @@
                     agendasPorAnuncio[utm] = (agendasPorAnuncio[utm] || 0) + 1;
                 }
             });
-            updateAdsKPIs(); renderAdsTable();
+            updateAdsKPIs(); renderAdsTable(); renderAdsChart();
             updateStripeKPIs(); renderStripeTable(); renderStripeCharts();
+            updateTPKPIs(); renderTPTable(); renderTPChart();
+            updateOverview(); updateTimestamp('overviewUpdate');
         }
 
         // ===== AUTH =====
@@ -788,26 +790,28 @@
         }
 
         function updateStripeKPIs() {
-            const filtered = getFilteredStripe();
-            const activas = filtered.filter(r => getStatus(r)==='Activa');
-            const impagos = filtered.filter(r => getStatus(r)==='Impago');
-            const totalRev = activas.reduce((s,r) => s + (r.fields['Importe €']||0), 0);
-            const avg = activas.length>0 ? totalRev/activas.length : 0;
-
-            // MRR estimation: normalize to monthly
+            // MRR y activas totales — siempre sobre todos los datos (estado actual)
+            const todasActivas = stripeRecords.filter(r => getStatus(r)==='Activa');
             let mrr = 0;
-            activas.forEach(r => {
+            todasActivas.forEach(r => {
                 const amt = r.fields['Importe €']||0;
                 const freq = (r.fields['Frecuencia']||'').toLowerCase();
                 if(freq.includes('12 sem')) mrr += amt/(12/4.33);
                 else if(freq.includes('24 sem')) mrr += amt/(24/4.33);
                 else if(freq.includes('mes') || freq.includes('month')) mrr += amt;
                 else if(freq.includes('año') || freq.includes('year') || freq.includes('anual')) mrr += amt/12;
-                else mrr += amt/3; // default quarterly estimate
+                else mrr += amt/3;
             });
 
-            document.getElementById('kpiStripeSubs').textContent = num(activas.length);
-            document.getElementById('kpiStripeRevenue').textContent = eur(totalRev);
+            // Altas nuevas e impagos — filtrados por período
+            const filtered = getFilteredStripe();
+            const nuevasAltas = filtered.filter(r => getStatus(r)==='Activa');
+            const impagos = filtered.filter(r => getStatus(r)==='Impago');
+            const ingresosPeriodo = nuevasAltas.reduce((s,r) => s + (r.fields['Importe €']||0), 0);
+            const avg = nuevasAltas.length>0 ? ingresosPeriodo/nuevasAltas.length : 0;
+
+            document.getElementById('kpiStripeSubs').textContent = num(todasActivas.length);
+            document.getElementById('kpiStripeRevenue').textContent = eur(ingresosPeriodo);
             document.getElementById('kpiStripeAvg').textContent = eur(avg);
             document.getElementById('kpiStripeMRR').textContent = eur(mrr);
             document.getElementById('kpiStripeImpago').textContent = num(impagos.length);
