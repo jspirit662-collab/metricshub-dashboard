@@ -433,7 +433,7 @@
                 <div class="table-container">
                     <table><thead><tr>
                         <th>Cliente</th><th>Email</th><th>Plan</th>
-                        <th>Importe</th><th>Estado</th><th>Frecuencia</th>
+                        <th>Importe</th><th>Estado</th><th>Frecuencia</th><th>Inicio</th><th>Próximo pago</th>
                     </tr></thead><tbody id="stripeTableBody">
                         <tr><td colspan="6"><div class="loading"><div class="spinner"></div><p>Cargando datos...</p></div></td></tr>
                     </tbody></table>
@@ -849,7 +849,9 @@
                     <td>${f['Email']||'-'}</td><td>${f['Plan']||'-'}</td>
                     <td>${eur(f['Importe €']||0)}</td>
                     <td><span class="status-badge ${cls}">${st}</span></td>
-                    <td>${f['Frecuencia']||'-'}</td>`;
+                    <td>${f['Frecuencia']||'-'}</td>
+                    <td>${f['Inicio suscripción']||'-'}</td>
+                    <td>${f['Próximo pago']||'-'}</td>`;
                 tbody.appendChild(tr);
             });
         }
