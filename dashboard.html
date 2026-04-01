@@ -350,6 +350,18 @@
 
                 <div class="controls">
                     <div class="control-section">
+                        <label class="control-label">Período (agendas)</label>
+                        <div class="pills" style="flex-wrap:wrap;gap:6px;align-items:center">
+                            <button class="pill date-preset" data-preset="hoy" onclick="setDatePreset('hoy')">Hoy</button>
+                            <button class="pill date-preset" data-preset="semana" onclick="setDatePreset('semana')">Esta semana</button>
+                            <button class="pill date-preset" data-preset="mes" onclick="setDatePreset('mes')">Este mes</button>
+                            <button class="pill date-preset" data-preset="30d" onclick="setDatePreset('30d')">Últimos 30d</button>
+                            <button class="pill date-preset active" data-preset="todo" onclick="setDatePreset('todo')">Todo</button>
+                            <input type="date" id="dateFrom" onchange="onDateChange()" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px">
+                            <input type="date" id="dateTo" onchange="onDateChange()" style="padding:4px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px">
+                        </div>
+                    </div>
+                    <div class="control-section">
                         <label class="control-label">Filtrar por leads</label>
                         <div class="pills" id="adsFilterPills">
                             <button class="pill active" onclick="setAdsFilter('todos')">Todos</button>
@@ -514,6 +526,54 @@
         let stripeFilter = 'todos';
         let tpFilter = 'todos';
         let charts = {};
+        let dateFrom = null, dateTo = null;
+
+        // ===== FECHA UTILS =====
+        function setDatePreset(preset) {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            let from = null, to = new Date();
+            to.setHours(23,59,59,999);
+            if (preset === 'hoy') { from = new Date(today); }
+            else if (preset === 'semana') { from = new Date(today); from.setDate(today.getDate() - today.getDay() + 1); }
+            else if (preset === 'mes') { from = new Date(today.getFullYear(), today.getMonth(), 1); }
+            else if (preset === '30d') { from = new Date(today); from.setDate(today.getDate() - 29); }
+            else { from = null; to = null; }
+            dateFrom = from;
+            dateTo = to;
+            const fmt = d => d ? d.toISOString().split('T')[0] : '';
+            document.getElementById('dateFrom').value = fmt(from);
+            document.getElementById('dateTo').value = fmt(to);
+            document.querySelectorAll('.date-preset').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.date-preset').forEach(b => { if(b.dataset.preset===preset) b.classList.add('active'); });
+            recalcAgendas();
+        }
+
+        function onDateChange() {
+            const f = document.getElementById('dateFrom').value;
+            const t = document.getElementById('dateTo').value;
+            dateFrom = f ? new Date(f + 'T00:00:00') : null;
+            dateTo   = t ? new Date(t + 'T23:59:59') : null;
+            document.querySelectorAll('.date-preset').forEach(b => b.classList.remove('active'));
+            recalcAgendas();
+        }
+
+        function recalcAgendas() {
+            agendasPorAnuncio = {};
+            llamadasRecords.forEach(r => {
+                const utm = (r.fields['UTM Content'] || '').trim().toLowerCase();
+                if (!utm) return;
+                const fechaStr = r.fields['FECHA RESERVA'];
+                if (dateFrom || dateTo) {
+                    if (!fechaStr) return;
+                    const fecha = new Date(fechaStr);
+                    if (dateFrom && fecha < dateFrom) return;
+                    if (dateTo && fecha > dateTo) return;
+                }
+                agendasPorAnuncio[utm] = (agendasPorAnuncio[utm] || 0) + 1;
+            });
+            updateAdsKPIs(); renderAdsTable();
+        }
 
         // ===== AUTH =====
         async function sha256(str) {
@@ -577,12 +637,7 @@
                     fetchTable(ADS_BASE, ADS_TABLE),
                     fetchTable(LLAMADAS_BASE, LLAMADAS_TABLE)
                 ]);
-                // Calcular agendas reales por anuncio via UTM Content
-                agendasPorAnuncio = {};
-                llamadasRecords.forEach(r => {
-                    const utm = (r.fields['UTM Content'] || '').trim().toLowerCase();
-                    if (utm) agendasPorAnuncio[utm] = (agendasPorAnuncio[utm] || 0) + 1;
-                });
+                recalcAgendas();
                 updateAdsKPIs(); renderAdsTable(); renderAdsChart();
                 updateTimestamp('adsUpdate');
             } catch(e) { console.error('Ads error:', e); }
