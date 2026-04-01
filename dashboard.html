@@ -492,7 +492,7 @@
 
     <script>
         // ===== CONFIG =====
-        const PROXY_URL = 'https://metricshub-dashboard.onrender.com';
+        const AIRTABLE_TOKEN = 'patmaMnUYQsloPgPU.2e134dc25839ffa8eff55e240916ad518e5280b3dfb47535a745b97e7248d125';
         const PASSWORD_HASH = 'e4a114787a29c3be3b795ae110cb790eec0299c6ef259cc03881e8a7ba791d49';
 
         const ADS_BASE = 'appYJG2yB0mirwr8C';
@@ -545,13 +545,13 @@
             else document.querySelector(`[onclick*="${id}"]`).classList.add('active');
         }
 
-        // ===== AIRTABLE FETCH (via proxy) =====
+        // ===== AIRTABLE FETCH =====
         async function fetchTable(base, table) {
             let all = [], offset = null;
             do {
-                let url = `${PROXY_URL}/airtable?base=${base}&table=${encodeURIComponent(table)}`;
-                if (offset) url += `&offset=${offset}`;
-                const res = await fetch(url);
+                let url = `https://api.airtable.com/v0/${base}/${table}`;
+                if (offset) url += `?offset=${offset}`;
+                const res = await fetch(url, { headers: { 'Authorization': `Bearer ${AIRTABLE_TOKEN}` } });
                 if (!res.ok) throw new Error(`API ${res.status}`);
                 const data = await res.json();
                 all = all.concat(data.records || []);
