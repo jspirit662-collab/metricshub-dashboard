@@ -755,9 +755,9 @@
     </div>
 
     <script>
+        const PROXY_URL = 'https://metricshub-dashboard.onrender.com';
         const AIRTABLE_BASE = 'appYJG2yB0mirwr8C';
         const AIRTABLE_TABLE = 'tblnwcn7i7a3XZu1A';
-        const AIRTABLE_TOKEN = 'patCbAOuXkQUOhKmQ.b2c1e1c64fa31e879b9eece4faa0b33c6ee0c498c1847bbf22e1bd38d73ba106';
         const PASSWORD_HASH = 'e4a114787a29c3be3b795ae110cb790eec0299c6ef259cc03881e8a7ba791d49';
 
         let allRecords = [];
@@ -817,12 +817,10 @@
             let offset = null;
 
             do {
-                let url = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}`;
-                if (offset) url += `?offset=${offset}`;
+                let url = `${PROXY_URL}/airtable?base=${AIRTABLE_BASE}&table=${AIRTABLE_TABLE}`;
+                if (offset) url += `&offset=${offset}`;
 
-                const response = await fetch(url, {
-                    headers: { 'Authorization': `Bearer ${AIRTABLE_TOKEN}` }
-                });
+                const response = await fetch(url);
 
                 if (!response.ok) throw new Error(`API error: ${response.status}`);
 
@@ -1025,21 +1023,15 @@
 
             try {
                 if (editingRecordId) {
-                    await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}/${editingRecordId}`, {
+                    await fetch(`${PROXY_URL}/airtable?base=${AIRTABLE_BASE}&table=${AIRTABLE_TABLE}&record_id=${editingRecordId}`, {
                         method: 'PATCH',
-                        headers: {
-                            'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
-                            'Content-Type': 'application/json'
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ fields })
                     });
                 } else {
-                    await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}`, {
+                    await fetch(`${PROXY_URL}/airtable?base=${AIRTABLE_BASE}&table=${AIRTABLE_TABLE}`, {
                         method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
-                            'Content-Type': 'application/json'
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ records: [{ fields }] })
                     });
                 }
@@ -1054,9 +1046,8 @@
             if (!confirm('¿Confirmar eliminación?')) return;
 
             try {
-                await fetch(`https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}/${recordId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${AIRTABLE_TOKEN}` }
+                await fetch(`${PROXY_URL}/airtable?base=${AIRTABLE_BASE}&table=${AIRTABLE_TABLE}&record_id=${recordId}`, {
+                    method: 'DELETE'
                 });
                 refreshData();
             } catch (error) {

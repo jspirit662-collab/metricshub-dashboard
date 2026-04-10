@@ -517,21 +517,28 @@ def get_ghl_calendars():
 # Token: desde cabecera X-AT-Token (frontend) o variable de entorno AIRTABLE_TOKEN
 # NUNCA hardcodeado en código fuente
 # ─────────────────────────────────────────
-@app.route("/airtable")
+@app.route("/airtable", methods=["GET", "POST", "PATCH", "DELETE"])
 def get_airtable():
     token = request.headers.get("X-AT-Token") or os.getenv("AIRTABLE_TOKEN", "")
     base  = request.args.get("base") or os.getenv("AIRTABLE_BASE_ID", "app8nkARmupm6hbW1")
     table = request.args.get("table", "Clientes Activos")
+    record_id = request.args.get("record_id", "")
     if not token:
         return jsonify({"error": "Airtable token no configurado"}), 401
     if req is None:
         return jsonify({"error": "requests library no instalada"}), 500
+
     AT_BASE = "https://api.airtable.com/v0"
-    headers_at = {"Authorization": f"Bearer {token}"}
+    headers_at = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
     try:
-        all_records = []
-        offset = None
-        while True:
+        # ── GET: listar todos los registros con paginación ──
+        if request.method == "GET":
+            all_records = []
+            offset = request.args.get("offset")
             params = {"maxRecords": 100}
             if offset:
                 params["offset"] = offset
@@ -542,11 +549,34 @@ def get_airtable():
                 return jsonify({"error": f"Tabla '{table}' no encontrada en base {base}"}), 404
             r.raise_for_status()
             data = r.json()
-            all_records.extend(data.get("records", []))
-            offset = data.get("offset")
-            if not offset:
-                break
-        return jsonify({"records": all_records})
+            return jsonify({"records": data.get("records", []), "offset": data.get("offset")})
+
+        # ── POST: crear registro ──
+        elif request.method == "POST":
+            body = request.get_json()
+            r = req.post(f"{AT_BASE}/{base}/{table}", headers=headers_at,
+                         json=body, timeout=15)
+            r.raise_for_status()
+            return jsonify(r.json())
+
+        # ── PATCH: actualizar registro ──
+        elif request.method == "PATCH":
+            if not record_id:
+                return jsonify({"error": "record_id requerido"}), 400
+            body = request.get_json()
+            r = req.patch(f"{AT_BASE}/{base}/{table}/{record_id}", headers=headers_at,
+                          json=body, timeout=15)
+            r.raise_for_status()
+            return jsonify(r.json())
+
+        # ── DELETE: eliminar registro ──
+        elif request.method == "DELETE":
+            if not record_id:
+                return jsonify({"error": "record_id requerido"}), 400
+            r = req.delete(f"{AT_BASE}/{base}/{table}/{record_id}", headers=headers_at, timeout=15)
+            r.raise_for_status()
+            return jsonify(r.json())
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
