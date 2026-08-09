@@ -200,6 +200,7 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
     <button class="ni" onclick="nav('ig',this)"><span class="ni-ico">📸</span><span>Instagram</span></button>
     <button class="ni" onclick="nav('meta',this)"><span class="ni-ico">🔵</span><span>Meta Ads</span></button>
     <button class="ni" onclick="nav('stripe',this)"><span class="ni-ico">💳</span><span>Stripe</span></button>
+    <button class="ni" onclick="nav('inv',this)"><span class="ni-ico">📈</span><span>Inversiones</span></button>
   </div>
   <div class="sb-grp">
     <div class="sb-lbl">Negocio</div>
@@ -563,6 +564,45 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
       </h3>
       <table><thead><tr><th>Cliente</th><th>Importe</th><th>Método</th><th>Estrategia</th><th>Fecha</th><th>Notas</th><th></th></tr></thead>
       <tbody id="mp-tb"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">Sin pagos manuales aún. Pulsa "+ Añadir" para registrar un Bizum o transferencia.</td></tr></tbody></table>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════
+       INVERSIONES
+  ═══════════════════════════ -->
+  <section id="sec-inv" class="sec">
+    <div class="kpi-g">
+      <div class="kpi kc-coral"><div class="kpi-ico">📈</div><div class="kpi-lbl">Retorno Cartera</div><div class="kpi-val" id="inv-ret">—</div><div class="kpi-d">3 años</div></div>
+      <div class="kpi kc-coral"><div class="kpi-ico">🏆</div><div class="kpi-lbl">MSCI World 3a</div><div class="kpi-val" id="inv-msci">—</div><div class="kpi-d">Benchmark</div></div>
+      <div class="kpi kc-coral"><div class="kpi-ico">📊</div><div class="kpi-lbl">S&P 500 3a</div><div class="kpi-val" id="inv-sp500">—</div><div class="kpi-d">Benchmark</div></div>
+      <div class="kpi kc-ok"><div class="kpi-ico">📉</div><div class="kpi-lbl">CAGR Estimado</div><div class="kpi-val" id="inv-cagr">—</div><div class="kpi-d">3 años DCA</div></div>
+    </div>
+
+    <div class="cg g2">
+      <div class="cc">
+        <h3>Comparativa de Benchmarks</h3>
+        <div class="cw h250"><canvas id="ch-inv-bench"></canvas></div>
+      </div>
+      <div class="cc">
+        <h3>Riesgo de Concentración</h3>
+        <div class="cw h250"><canvas id="ch-inv-conc"></canvas></div>
+      </div>
+    </div>
+
+    <div class="tc">
+      <h3>Top Posiciones por Valor</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Posición</th>
+            <th>% Cartera</th>
+            <th>Monto</th>
+          </tr>
+        </thead>
+        <tbody id="inv-pos-tb">
+          <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:16px">Cargando datos...</td></tr>
+        </tbody>
+      </table>
     </div>
   </section>
 </main>
@@ -1175,6 +1215,66 @@ function rMeta(d){
   }
 }
 
+function rInversiones(inv){
+  if(inv&&inv.status==='ok'){
+    // Actualizar KPIs
+    const ret=inv.benchmark?.cartera||0;
+    const msci=inv.benchmark?.msci_world||0;
+    const sp500=inv.benchmark?.sp500||0;
+    const cagr=inv.cagr?.cartera||0;
+
+    setKpi('inv-ret',(ret>0?'+':'')+ret+'%');
+    setKpi('inv-msci',(msci>0?'+':'')+msci+'%');
+    setKpi('inv-sp500',(sp500>0?'+':'')+sp500+'%');
+    setKpi('inv-cagr',(cagr>0?'+':'')+cagr+'%');
+
+    // Gráfico de benchmarks
+    mk('ch-inv-bench','bar',{
+      labels:['Mi Cartera','MSCI World','S&P 500'],
+      datasets:[{
+        label:'Retorno 3a',
+        data:[ret,msci,sp500],
+        backgroundColor:[CO+'88',ME+'88','#7C3AED88'],
+        borderRadius:5
+      }]
+    });
+
+    // Gráfico de concentración (dummy data for now)
+    mk('ch-inv-conc','doughnut',{
+      labels:['Top 1','Top 3','Top 5','Resto'],
+      datasets:[{
+        data:[15.3,26.9,16.1,41.7],
+        backgroundColor:[CO+'BB',ME+'BB','#7C3AED99','#9CA3AF66'],
+        borderWidth:0,
+        hoverOffset:5
+      }]
+    },{plugins:{legend:{position:'bottom'}}});
+
+    // Posiciones (dummy data for now)
+    document.getElementById('inv-pos-tb').innerHTML=`<tr>
+      <td style="font-weight:600;color:var(--text)">Vanguard S&P 500 U...</td>
+      <td style="text-align:right;font-weight:700;color:var(--coral)">15.3%</td>
+      <td style="text-align:right;color:var(--muted)">~€3.8k</td>
+    </tr><tr>
+      <td style="font-weight:600;color:var(--text)">Alphabet Inc Class A</td>
+      <td style="text-align:right;font-weight:700;color:var(--coral)">13.0%</td>
+      <td style="text-align:right;color:var(--muted)">~€3.2k</td>
+    </tr><tr>
+      <td style="font-weight:600;color:var(--text)">Apple Inc (USD)</td>
+      <td style="text-align:right;font-weight:700;color:var(--coral)">9.1%</td>
+      <td style="text-align:right;color:var(--muted)">~€2.3k</td>
+    </tr>`;
+  } else {
+    setKpi('inv-ret','—');
+    setKpi('inv-msci','—');
+    setKpi('inv-sp500','—');
+    setKpi('inv-cagr','—');
+    mk('ch-inv-bench','bar',{labels:[],datasets:[]});
+    mk('ch-inv-conc','doughnut',{labels:[],datasets:[]});
+    document.getElementById('inv-pos-tb').innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:16px">Sin datos disponibles</td></tr>';
+  }
+}
+
 function rStripe(stripe){
   if(stripe){
     setKpi('st-mrr',eur(stripe.mrr||0));
@@ -1363,6 +1463,18 @@ async function fetchStripeReal(){
   }catch(e){return null;}
 }
 
+// ── INVERSIONES ──
+async function fetchInversionesReal(){
+  const proxy=CFG.pU||'http://localhost:5050';
+  try{
+    const r=await fetch(`${proxy}/inversiones`);
+    if(!r.ok)return null;
+    const data=await r.json();
+    if(data.error){console.warn('Inversiones proxy:',data.error);return null;}
+    return data;
+  }catch(e){console.warn('Inversiones fetch error:',e);return null;}
+}
+
 // ── BOOT ──
 
 // ── TRAININGPEAKS — AIRTABLE ──
@@ -1447,7 +1559,7 @@ async function load(){
     d.cj.clients=0;d.cj.calls=0;d.s1.cli=0;d.s2.cli=0;d.s1.calls=0;d.s2.calls=0;
     d.cj.close=0;d.cj.cpa=0;d.cj.cac=0;
   }
-  const [rm,rg,rs]=await Promise.all([fetchMetaReal(),fetchGHLReal(),fetchStripeReal()]);
+  const [rm,rg,rs,ri]=await Promise.all([fetchMetaReal(),fetchGHLReal(),fetchStripeReal(),fetchInversionesReal()]);
 
   // Manejar token expirado
   const tokenBanner=document.getElementById('meta-token-banner');
@@ -1609,7 +1721,7 @@ async function load(){
     if(mb){mb.textContent='● EN VIVO';mb.className='mode live';}
   }
 
-  rConjunto(d);rS1(d);rS2(d);rIG(d);rMeta(d);rStripe(rs);
+  rConjunto(d);rS1(d);rS2(d);rIG(d);rMeta(d);rStripe(rs);rInversiones(ri);
   if(CFG.atT){fetchAirtable().then(atData=>{rTP(atData);});}else{rTP(null);}
   document.getElementById('lu').textContent=new Date().toLocaleTimeString('es');
 }
@@ -1627,7 +1739,8 @@ const TITLES={
   ig:['Instagram','Seguidores, DMs y crecimiento de cuenta'],
   meta:['Meta Ads','Campañas activas, gasto e impresiones'],
   stripe:['Stripe — Estrategas','Ingresos y pagos en tiempo real (datos reales)'],
-  tp:['TrainingPeaks — Clientes Activos','164 clientes activos · Conectado a Airtable']
+  tp:['TrainingPeaks — Clientes Activos','164 clientes activos · Conectado a Airtable'],
+  inv:['Inversiones','Análisis de cartera y benchmarks']
 };
 function nav(id,btn){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
