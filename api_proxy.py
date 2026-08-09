@@ -581,7 +581,7 @@ def get_airtable():
         return jsonify({"error": str(e)}), 500
 
 # ─────────────────────────────────────────
-# INVERSIONES — XIMESCANELLAS
+# INVERSIONES — XIMESCANELLAS (HITCLOSER)
 # ─────────────────────────────────────────
 @app.route("/inversiones")
 def get_inversiones():
@@ -589,41 +589,96 @@ def get_inversiones():
         return jsonify({"error": "requests library no instalada"}), 500
 
     try:
-        # Obtener datos del dashboard de inversiones
-        r = req.get("https://ximescanellas.com/inversiones", timeout=15)
+        # Obtener HTML del dashboard de inversiones en ximescanellas.com
+        r = req.get("https://ximescanellas.com/inversiones", timeout=15, allow_redirects=True)
         r.raise_for_status()
 
-        # Parsear HTML para extraer datos
-        from html.parser import HTMLParser
-        import re
-
         html = r.text
+        import re
+        from bs4 import BeautifulSoup
 
-        # Extraer porcentajes del benchmark
-        benchmark_match = re.search(r'MSCI World 3a:\s*([+-]?\d+\.?\d*)%', html)
-        sp500_match = re.search(r'S&P 500 3a:\s*([+-]?\d+\.?\d*)%', html)
-        cartera_match = re.search(r'Mi cartera:\s*([+-]?\d+\.?\d*)%', html)
+        soup = BeautifulSoup(html, 'html.parser')
+
+        # Extraer datos con regex flexible
+        data = {
+            "status": "ok",
+            "benchmark": {},
+            "cagr": {},
+            "positions": [],
+            "error": None
+        }
+
+        # Búsqueda flexible: MSCI World 3a: +66.5% (o variaciones)
+        patterns = {
+            "msci_world": [r'MSCI[^%]*?([+-]?\d+\.?\d*)%', r'MSCI World[^%]*?([+-]?\d+\.?\d*)%'],
+            "sp500": [r'S&P\s*500[^%]*?([+-]?\d+\.?\d*)%', r'S\&P[^%]*?([+-]?\d+\.?\d*)%'],
+            "cartera": [r'Mi cartera[^%]*?([+-]?\d+\.?\d*)%', r'cartera[^%]*?([+-]?\d+\.?\d*)%']
+        }
+
+        for key, pattern_list in patterns.items():
+            for pattern in pattern_list:
+                match = re.search(pattern, html, re.IGNORECASE)
+                if match:
+                    try:
+                        data["benchmark"][key] = float(match.group(1))
+                        break
+                    except:
+                        pass
 
         # Extraer CAGR
-        cagr_cartera = re.search(r'([+-]?\d+\.?\d*)%.*?RETORNO TOTAL', html)
-        cagr_dca = re.search(r'([+-]?\d+\.?\d*)%.*?CAGR EST', html)
+        cagr_patterns = {
+            "cartera": [r'([+-]?\d+\.?\d*)%[^a-z]*RETORNO TOTAL', r'CAGR[^%]*?([+-]?\d+\.?\d*)%'],
+            "dca": [r'([+-]?\d+\.?\d*)%[^a-z]*(CAGR|DCA)', r'DCA[^%]*?([+-]?\d+\.?\d*)%']
+        }
 
+        for key, pattern_list in cagr_patterns.items():
+            for pattern in pattern_list:
+                match = re.search(pattern, html, re.IGNORECASE)
+                if match:
+                    try:
+                        # Si el patrón tiene múltiples grupos, usar el primero
+                        value = match.group(1) if match.groups() else match.group(0)
+                        data["cagr"][key] = float(value)
+                        break
+                    except:
+                        pass
+
+        # Extraer posiciones (tabla)
+        # Buscar filas de tabla que contengan posiciones
+        try:
+            # Buscar tabla o divs con posiciones
+            rows = soup.find_all(['tr', 'div'], class_=re.compile('position|posicion|row', re.I))
+            for row in rows[:10]:  # Top 10 posiciones
+                text = row.get_text()
+                match = re.search(r'([A-Za-z\s\(\)\.]+?)[^%]*?(\d+\.?\d*)%', text)
+                if match:
+                    data["positions"].append({
+                        "name": match.group(1).strip()[:50],
+                        "percentage": float(match.group(2))
+                    })
+        except:
+            pass
+
+        # Si no hay datos extraídos, retornar error
+        if not data["benchmark"]:
+            data["error"] = "No se pudieron extraer datos del dashboard"
+
+        return jsonify(data)
+
+    except req.exceptions.RequestException as e:
         return jsonify({
-            "status": "ok",
-            "benchmark": {
-                "msci_world": float(benchmark_match.group(1)) if benchmark_match else 0,
-                "sp500": float(sp500_match.group(1)) if sp500_match else 0,
-                "cartera": float(cartera_match.group(1)) if cartera_match else 0
-            },
-            "cagr": {
-                "cartera": float(cagr_cartera.group(1)) if cagr_cartera else 0,
-                "dca": float(cagr_dca.group(1)) if cagr_dca else 0
-            },
-            "updated": True
-        })
-
+            "status": "error",
+            "error": f"Error de conexión: {str(e)}",
+            "benchmark": {},
+            "cagr": {}
+        }), 500
     except Exception as e:
-        return jsonify({"error": str(e), "status": "error"}), 500
+        return jsonify({
+            "status": "error",
+            "error": str(e),
+            "benchmark": {},
+            "cagr": {}
+        }), 500
 
 
 # ─────────────────────────────────────────
