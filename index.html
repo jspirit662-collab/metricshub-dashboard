@@ -571,38 +571,53 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
        INVERSIONES
   ═══════════════════════════ -->
   <section id="sec-inv" class="sec">
+
+    <!-- Aportaciones MyInvestor -->
     <div class="kpi-g">
+      <div class="kpi kc-ok"><div class="kpi-ico">💶</div><div class="kpi-lbl">Total Aportado</div><div class="kpi-val" id="inv-total">—</div><div class="kpi-d" id="inv-range">—</div></div>
+      <div class="kpi kc-coral"><div class="kpi-ico">🧾</div><div class="kpi-lbl">Nº Aportaciones</div><div class="kpi-val" id="inv-count">—</div><div class="kpi-d">Suscripciones finalizadas</div></div>
+      <div class="kpi kc-coral"><div class="kpi-ico">📐</div><div class="kpi-lbl">Aportación Media</div><div class="kpi-val" id="inv-avg">—</div><div class="kpi-d">Por operación</div></div>
+      <div class="kpi kc-coral"><div class="kpi-ico">🗂️</div><div class="kpi-lbl">Fondos Distintos</div><div class="kpi-val" id="inv-funds">—</div><div class="kpi-d">En cartera indexada</div></div>
+      <div class="kpi kc-ok"><div class="kpi-ico">📅</div><div class="kpi-lbl">Ritmo Mensual</div><div class="kpi-val sm" id="inv-pace">—</div><div class="kpi-d">Media de aportación/mes</div></div>
+    </div>
+
+    <div class="cg g2">
+      <div class="cc">
+        <h3>Aportado por fondo <small>MyInvestor</small></h3>
+        <div class="cw h250"><canvas id="ch-inv-fund"></canvas></div>
+      </div>
+      <div class="cc">
+        <h3>Aportado por mes</h3>
+        <div class="cw h250"><canvas id="ch-inv-month"></canvas></div>
+      </div>
+    </div>
+
+    <div class="tc">
+      <h3>Desglose por fondo</h3>
+      <table>
+        <thead><tr><th>Fondo</th><th>Aportaciones</th><th>Total aportado</th><th>Participaciones</th><th>VL medio</th><th>% Cartera</th></tr></thead>
+        <tbody id="inv-fund-tb"></tbody>
+      </table>
+    </div>
+
+    <div class="tc">
+      <h3>Historial de aportaciones <small style="font-weight:400;color:var(--muted)">— suscripciones puntuales</small></h3>
+      <table>
+        <thead><tr><th>Fecha</th><th>Fondo</th><th>Importe</th><th>Participaciones</th><th>VL aplicado</th></tr></thead>
+        <tbody id="inv-tx-tb"></tbody>
+      </table>
+    </div>
+
+    <!-- Benchmarks (desde ximescanellas.com/inversiones) -->
+    <div class="kpi-g" style="margin-top:20px">
       <div class="kpi kc-coral"><div class="kpi-ico">📈</div><div class="kpi-lbl">Retorno Cartera</div><div class="kpi-val" id="inv-ret">—</div><div class="kpi-d">3 años</div></div>
       <div class="kpi kc-coral"><div class="kpi-ico">🏆</div><div class="kpi-lbl">MSCI World 3a</div><div class="kpi-val" id="inv-msci">—</div><div class="kpi-d">Benchmark</div></div>
       <div class="kpi kc-coral"><div class="kpi-ico">📊</div><div class="kpi-lbl">S&P 500 3a</div><div class="kpi-val" id="inv-sp500">—</div><div class="kpi-d">Benchmark</div></div>
       <div class="kpi kc-ok"><div class="kpi-ico">📉</div><div class="kpi-lbl">CAGR Estimado</div><div class="kpi-val" id="inv-cagr">—</div><div class="kpi-d">3 años DCA</div></div>
     </div>
-
-    <div class="cg g2">
-      <div class="cc">
-        <h3>Comparativa de Benchmarks</h3>
-        <div class="cw h250"><canvas id="ch-inv-bench"></canvas></div>
-      </div>
-      <div class="cc">
-        <h3>Riesgo de Concentración</h3>
-        <div class="cw h250"><canvas id="ch-inv-conc"></canvas></div>
-      </div>
-    </div>
-
-    <div class="tc">
-      <h3>Top Posiciones por Valor</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Posición</th>
-            <th>% Cartera</th>
-            <th>Monto</th>
-          </tr>
-        </thead>
-        <tbody id="inv-pos-tb">
-          <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:16px">Cargando datos...</td></tr>
-        </tbody>
-      </table>
+    <div class="cc">
+      <h3>Comparativa de Benchmarks <small id="inv-bench-src">requiere proxy con acceso a ximescanellas.com</small></h3>
+      <div class="cw h250"><canvas id="ch-inv-bench"></canvas></div>
     </div>
   </section>
 </main>
@@ -1215,63 +1230,132 @@ function rMeta(d){
   }
 }
 
-function rInversiones(inv){
-  if(inv&&inv.status==='ok'){
-    // Actualizar KPIs
-    const ret=inv.benchmark?.cartera||0;
-    const msci=inv.benchmark?.msci_world||0;
-    const sp500=inv.benchmark?.sp500||0;
-    const cagr=inv.cagr?.cartera||0;
+// ── MYINVESTOR — CATÁLOGO DE FONDOS ──
+const MI_FUNDS={
+  devworld:{name:'iShares Developed World Index (IE) Acc',short:'iShares Developed World',color:ME},
+  isem    :{name:'iShares Emerging Markets Index Fund (IE)',short:'iShares Emerging Markets',color:OK},
+  europe  :{name:'Vanguard European Stock Index Fund EUR',short:'Vanguard European Stock',color:ST},
+  smallcap:{name:'Vanguard Global Small-Cap Index Fund EUR',short:'Vanguard Global Small-Cap',color:CO},
+  vgem    :{name:'Vanguard Emerging Markets Stock Index',short:'Vanguard Emerging Markets',color:WA}
+};
 
-    setKpi('inv-ret',(ret>0?'+':'')+ret+'%');
-    setKpi('inv-msci',(msci>0?'+':'')+msci+'%');
-    setKpi('inv-sp500',(sp500>0?'+':'')+sp500+'%');
-    setKpi('inv-cagr',(cagr>0?'+':'')+cagr+'%');
+// ── MYINVESTOR — APORTACIONES (suscripciones finalizadas) ──
+// Fuente: app MyInvestor → Fondos de inversión. Importes en €, participaciones tal cual.
+const MI_TX=[
+  {d:'2026-06-10',f:'smallcap',amt:200,  p:0.47},
+  {d:'2026-06-11',f:'europe',  amt:500,  p:12.04},
+  {d:'2026-06-13',f:'devworld',amt:900,  p:75.85},
+  {d:'2026-06-14',f:'vgem',    amt:250,  p:0.78},
+  {d:'2026-06-20',f:'devworld',amt:900,  p:75.83},
+  {d:'2026-06-24',f:'smallcap',amt:200,  p:0.45},
+  {d:'2026-06-25',f:'europe',  amt:500,  p:11.97},
+  {d:'2026-06-26',f:'devworld',amt:2000, p:166.68},
+  {d:'2026-06-26',f:'isem',    amt:3000, p:212.18},
+  {d:'2026-06-26',f:'europe',  amt:2000, p:47.83},
+  {d:'2026-06-26',f:'smallcap',amt:2000, p:4.6},
+  {d:'2026-06-27',f:'devworld',amt:900,  p:75},
+  {d:'2026-06-28',f:'vgem',    amt:250,  p:0.79},
+  {d:'2026-07-04',f:'devworld',amt:900,  p:74.69},
+  {d:'2026-07-08',f:'smallcap',amt:200,  p:0.46},
+  {d:'2026-07-11',f:'devworld',amt:900,  p:74.52},
+  {d:'2026-07-12',f:'vgem',    amt:250,  p:0.82},
+  {d:'2026-07-18',f:'devworld',amt:900,  p:74.62},
+  {d:'2026-07-22',f:'smallcap',amt:200,  p:0.46},
+  {d:'2026-07-25',f:'devworld',amt:900,  p:75.05},
+  {d:'2026-07-26',f:'vgem',    amt:250,  p:0.85},
+  {d:'2026-08-01',f:'devworld',amt:900,  p:73.24}
+];
 
-    // Gráfico de benchmarks
-    mk('ch-inv-bench','bar',{
-      labels:['Mi Cartera','MSCI World','S&P 500'],
-      datasets:[{
-        label:'Retorno 3a',
-        data:[ret,msci,sp500],
-        backgroundColor:[CO+'88',ME+'88','#7C3AED88'],
-        borderRadius:5
-      }]
-    });
+const MI_MONTHS=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const fmtDate=iso=>{const[y,m,dd]=iso.split('-');return `${dd} ${MI_MONTHS[+m-1]} ${y}`};
+const fmtNum=(v,dec=2)=>Number(v).toLocaleString('es-ES',{minimumFractionDigits:dec,maximumFractionDigits:dec});
 
-    // Gráfico de concentración (dummy data for now)
-    mk('ch-inv-conc','doughnut',{
-      labels:['Top 1','Top 3','Top 5','Resto'],
-      datasets:[{
-        data:[15.3,26.9,16.1,41.7],
-        backgroundColor:[CO+'BB',ME+'BB','#7C3AED99','#9CA3AF66'],
-        borderWidth:0,
-        hoverOffset:5
-      }]
-    },{plugins:{legend:{position:'bottom'}}});
+function rMyInvestor(){
+  const tx=[...MI_TX].sort((a,b)=>a.d.localeCompare(b.d));
+  if(!tx.length)return;
 
-    // Posiciones (dummy data for now)
-    document.getElementById('inv-pos-tb').innerHTML=`<tr>
-      <td style="font-weight:600;color:var(--text)">Vanguard S&P 500 U...</td>
-      <td style="text-align:right;font-weight:700;color:var(--coral)">15.3%</td>
-      <td style="text-align:right;color:var(--muted)">~€3.8k</td>
-    </tr><tr>
-      <td style="font-weight:600;color:var(--text)">Alphabet Inc Class A</td>
-      <td style="text-align:right;font-weight:700;color:var(--coral)">13.0%</td>
-      <td style="text-align:right;color:var(--muted)">~€3.2k</td>
-    </tr><tr>
-      <td style="font-weight:600;color:var(--text)">Apple Inc (USD)</td>
-      <td style="text-align:right;font-weight:700;color:var(--coral)">9.1%</td>
-      <td style="text-align:right;color:var(--muted)">~€2.3k</td>
+  const total=tx.reduce((s,t)=>s+t.amt,0);
+  const byFund={},byMonth={};
+  tx.forEach(t=>{
+    const f=byFund[t.f]||(byFund[t.f]={amt:0,parts:0,n:0});
+    f.amt+=t.amt; f.parts+=t.p; f.n++;
+    const mk_=t.d.slice(0,7);
+    byMonth[mk_]=(byMonth[mk_]||0)+t.amt;
+  });
+
+  const monthKeys=Object.keys(byMonth).sort();
+  const fundKeys=Object.keys(byFund).sort((a,b)=>byFund[b].amt-byFund[a].amt);
+
+  // ── KPIs ──
+  setKpi('inv-total',eur(total));
+  setKpi('inv-count',tx.length);
+  setKpi('inv-avg',eur(total/tx.length));
+  setKpi('inv-funds',fundKeys.length);
+  setKpi('inv-pace',eur(total/monthKeys.length));
+  setKpi('inv-range',`${fmtDate(tx[0].d)} → ${fmtDate(tx[tx.length-1].d)}`);
+
+  // ── Charts ──
+  mk('ch-inv-fund','doughnut',{
+    labels:fundKeys.map(k=>`${MI_FUNDS[k].short} (${(byFund[k].amt/total*100).toFixed(1)}%)`),
+    datasets:[{data:fundKeys.map(k=>byFund[k].amt),backgroundColor:fundKeys.map(k=>MI_FUNDS[k].color+'CC'),borderWidth:0,hoverOffset:5}]
+  },{plugins:{legend:{position:'bottom',labels:{color:'#9C8A84',font:{size:10},boxWidth:10}}}});
+
+  mk('ch-inv-month','bar',{
+    labels:monthKeys.map(k=>`${MI_MONTHS[+k.slice(5)-1]} ${k.slice(0,4)}`),
+    datasets:[{label:'Aportado €',data:monthKeys.map(k=>byMonth[k]),backgroundColor:OK+'88',borderRadius:5}]
+  });
+
+  // ── Tabla por fondo ──
+  document.getElementById('inv-fund-tb').innerHTML=fundKeys.map(k=>{
+    const f=byFund[k],fu=MI_FUNDS[k];
+    return `<tr>
+      <td style="font-weight:600;color:var(--text)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${fu.color};margin-right:7px"></span>${fu.name}</td>
+      <td>${f.n}</td>
+      <td style="font-weight:700;color:var(--ok)">${eur(f.amt)}</td>
+      <td style="color:var(--muted)">${fmtNum(f.parts)}</td>
+      <td style="color:var(--muted)">€${fmtNum(f.amt/f.parts)}</td>
+      <td><span class="bdg bc">${(f.amt/total*100).toFixed(1)}%</span></td>
     </tr>`;
+  }).join('')+`<tr style="background:var(--surface2)">
+      <td style="font-weight:700;color:var(--text)">TOTAL</td>
+      <td style="font-weight:700">${tx.length}</td>
+      <td style="font-weight:800;color:var(--ok)">${eur(total)}</td>
+      <td colspan="3" style="color:var(--muted)">${monthKeys.length} meses con aportaciones</td>
+    </tr>`;
+
+  // ── Historial (más reciente primero) ──
+  document.getElementById('inv-tx-tb').innerHTML=[...tx].reverse().map(t=>{
+    const fu=MI_FUNDS[t.f];
+    return `<tr>
+      <td style="color:var(--muted);white-space:nowrap">${fmtDate(t.d)}</td>
+      <td style="font-weight:600;color:var(--text)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${fu.color};margin-right:7px"></span>${fu.short}</td>
+      <td style="font-weight:700;color:var(--ok)">+${eur(t.amt)}</td>
+      <td style="color:var(--muted)">${fmtNum(t.p)}</td>
+      <td style="color:var(--muted)">€${fmtNum(t.amt/t.p)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function rInversiones(inv){
+  rMyInvestor();
+
+  const ok=inv&&inv.status==='ok'&&inv.benchmark&&Object.keys(inv.benchmark).length;
+  const src=document.getElementById('inv-bench-src');
+  if(ok){
+    const ret=inv.benchmark.cartera||0, msci=inv.benchmark.msci_world||0;
+    const sp500=inv.benchmark.sp500||0, cagr=(inv.cagr&&inv.cagr.cartera)||0;
+    const pct=v=>(v>0?'+':'')+v+'%';
+    setKpi('inv-ret',pct(ret));setKpi('inv-msci',pct(msci));
+    setKpi('inv-sp500',pct(sp500));setKpi('inv-cagr',pct(cagr));
+    if(src)src.textContent='ximescanellas.com/inversiones';
+    mk('ch-inv-bench','bar',{
+      labels:['Mi cartera','MSCI World','S&P 500'],
+      datasets:[{label:'Retorno 3a %',data:[ret,msci,sp500],backgroundColor:[CO+'88',ME+'88',ST+'88'],borderRadius:5}]
+    });
   } else {
-    setKpi('inv-ret','—');
-    setKpi('inv-msci','—');
-    setKpi('inv-sp500','—');
-    setKpi('inv-cagr','—');
-    mk('ch-inv-bench','bar',{labels:[],datasets:[]});
-    mk('ch-inv-conc','doughnut',{labels:[],datasets:[]});
-    document.getElementById('inv-pos-tb').innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:16px">Sin datos disponibles</td></tr>';
+    ['inv-ret','inv-msci','inv-sp500','inv-cagr'].forEach(id=>setKpi(id,'—'));
+    if(src)src.textContent='sin conexión con ximescanellas.com/inversiones';
+    mk('ch-inv-bench','bar',{labels:['Mi cartera','MSCI World','S&P 500'],datasets:[{label:'Retorno 3a %',data:[0,0,0],backgroundColor:['#9CA3AF33','#9CA3AF33','#9CA3AF33'],borderRadius:5}]});
   }
 }
 
