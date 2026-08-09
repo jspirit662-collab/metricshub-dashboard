@@ -621,9 +621,23 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
       <div class="kpi kc-coral"><div class="kpi-ico">📊</div><div class="kpi-lbl">S&P 500 3a</div><div class="kpi-val" id="inv-sp500">—</div><div class="kpi-d">Benchmark</div></div>
       <div class="kpi kc-ok"><div class="kpi-ico">📉</div><div class="kpi-lbl">CAGR Estimado</div><div class="kpi-val" id="inv-cagr">—</div><div class="kpi-d">3 años DCA</div></div>
     </div>
-    <div class="cc">
-      <h3>Comparativa de Benchmarks <small id="inv-bench-src">requiere proxy con acceso a ximescanellas.com</small></h3>
-      <div class="cw h250"><canvas id="ch-inv-bench"></canvas></div>
+    <div class="cg g2">
+      <div class="cc">
+        <h3>Comparativa de Benchmarks <small id="inv-bench-src">—</small></h3>
+        <div class="cw h250"><canvas id="ch-inv-bench"></canvas></div>
+      </div>
+      <div class="cc">
+        <h3>Riesgo de concentración <small>% del valor de la cartera</small></h3>
+        <div class="cw h250"><canvas id="ch-inv-conc"></canvas></div>
+      </div>
+    </div>
+
+    <div class="tc">
+      <h3>Posiciones por valor <span id="inv-conc-badges" style="float:right;font-weight:400"></span></h3>
+      <table>
+        <thead><tr><th>Posición</th><th style="text-align:right">% Cartera</th></tr></thead>
+        <tbody id="inv-pos-tb"></tbody>
+      </table>
     </div>
   </section>
 </main>
@@ -1342,27 +1356,69 @@ function rMyInvestor(){
   }).join('');
 }
 
+// ── SEGUNDO BRÓKER — SNAPSHOT (ximescanellas.com/inversiones, 09/08/2026) ──
+// Respaldo cuando el proxy no alcanza el dominio. Los datos en vivo lo sobreescriben.
+const XS_SNAPSHOT={
+  date:'09/08/2026',
+  benchmark:{cartera:38.2,msci_world:66.5,sp500:69.7},
+  cagr:{cartera:11.4,msci:18.5,sp500:19.3},
+  conc:{top1:15.3,top3:42.1,top5:61.1,effN:11},
+  positions:[
+    {n:'Vanguard S&P 500 UCITS',pct:15.3},
+    {n:'Alphabet Inc Class A',pct:13.0},
+    {n:'Apple Inc (USD)',pct:9.1},
+    {n:'iShares Physical Gold',pct:4.8},
+    {n:'VanEck Semiconductor',pct:2.6},
+    {n:'Telefónica SA',pct:2.2},
+    {n:'Realty Income Corp',pct:1.4},
+    {n:'Vanguard Emerging Markets',pct:1.2},
+    {n:'iShares Core S&P 500',pct:1.2},
+    {n:'Vanguard FTSE All-World',pct:1.1}
+  ]
+};
+
 function rInversiones(inv){
   rMyInvestor();
 
-  const ok=inv&&inv.status==='ok'&&inv.benchmark&&Object.keys(inv.benchmark).length;
+  const live=inv&&inv.status==='ok'&&inv.benchmark&&Object.keys(inv.benchmark).length;
+  const d=live?inv:XS_SNAPSHOT;
   const src=document.getElementById('inv-bench-src');
-  if(ok){
-    const ret=inv.benchmark.cartera||0, msci=inv.benchmark.msci_world||0;
-    const sp500=inv.benchmark.sp500||0, cagr=(inv.cagr&&inv.cagr.cartera)||0;
-    const pct=v=>(v>0?'+':'')+v+'%';
-    setKpi('inv-ret',pct(ret));setKpi('inv-msci',pct(msci));
-    setKpi('inv-sp500',pct(sp500));setKpi('inv-cagr',pct(cagr));
-    if(src)src.textContent='ximescanellas.com/inversiones';
-    mk('ch-inv-bench','bar',{
-      labels:['Mi cartera','MSCI World','S&P 500'],
-      datasets:[{label:'Retorno 3a %',data:[ret,msci,sp500],backgroundColor:[CO+'88',ME+'88',ST+'88'],borderRadius:5}]
-    });
-  } else {
-    ['inv-ret','inv-msci','inv-sp500','inv-cagr'].forEach(id=>setKpi(id,'—'));
-    if(src)src.textContent='sin conexión con ximescanellas.com/inversiones';
-    mk('ch-inv-bench','bar',{labels:['Mi cartera','MSCI World','S&P 500'],datasets:[{label:'Retorno 3a %',data:[0,0,0],backgroundColor:['#9CA3AF33','#9CA3AF33','#9CA3AF33'],borderRadius:5}]});
-  }
+  if(src)src.textContent=live?'en vivo · ximescanellas.com/inversiones':`snapshot manual del ${XS_SNAPSHOT.date}`;
+
+  const ret=d.benchmark.cartera||0, msci=d.benchmark.msci_world||0;
+  const sp500=d.benchmark.sp500||0, cagr=(d.cagr&&d.cagr.cartera)||0;
+  const pct=v=>(v>0?'+':'')+v+'%';
+  setKpi('inv-ret',pct(ret));setKpi('inv-msci',pct(msci));
+  setKpi('inv-sp500',pct(sp500));setKpi('inv-cagr',pct(cagr)+(cagr?'/año':''));
+
+  mk('ch-inv-bench','bar',{
+    labels:['Mi cartera','MSCI World','S&P 500'],
+    datasets:[{label:'Retorno 3a %',data:[ret,msci,sp500],backgroundColor:[CO+'88',ME+'88',ST+'88'],borderRadius:5}]
+  });
+
+  // Concentración y posiciones: en vivo si el proxy las trae, si no el snapshot
+  const conc=(live&&inv.conc)||XS_SNAPSHOT.conc;
+  const pos=(live&&inv.positions&&inv.positions.length)?inv.positions:XS_SNAPSHOT.positions;
+
+  mk('ch-inv-conc','doughnut',{
+    labels:[`Top 1 (${conc.top1}%)`,`Top 2-3 (${(conc.top3-conc.top1).toFixed(1)}%)`,`Top 4-5 (${(conc.top5-conc.top3).toFixed(1)}%)`,`Resto (${(100-conc.top5).toFixed(1)}%)`],
+    datasets:[{data:[conc.top1,+(conc.top3-conc.top1).toFixed(1),+(conc.top5-conc.top3).toFixed(1),+(100-conc.top5).toFixed(1)],
+      backgroundColor:[CO+'CC',ME+'CC',ST+'99','#9CA3AF55'],borderWidth:0,hoverOffset:5}]
+  },{plugins:{legend:{position:'bottom',labels:{color:'#9C8A84',font:{size:10},boxWidth:10}}}});
+
+  const badges=document.getElementById('inv-conc-badges');
+  if(badges)badges.innerHTML=
+    `<span class="bdg bc">Top 3: ${conc.top3}%${conc.top3>40?' ⚠️':''}</span> `+
+    `<span class="bdg bm">Top 5: ${conc.top5}%</span> `+
+    `<span class="bdg bg">Nº efectivo: ${conc.effN}</span>`;
+
+  const mxPct=pos[0]?pos[0].pct:1;
+  document.getElementById('inv-pos-tb').innerHTML=pos.map(p=>`<tr>
+    <td style="font-weight:600;color:var(--text)">${p.n}
+      <div style="background:var(--surface2);border-radius:4px;height:6px;margin-top:4px;max-width:340px"><div style="height:6px;border-radius:4px;background:${ME};width:${(p.pct/mxPct*100).toFixed(0)}%"></div></div>
+    </td>
+    <td style="text-align:right;font-weight:700;color:var(--coral);vertical-align:top">${p.pct.toFixed(1)}%</td>
+  </tr>`).join('');
 }
 
 function rStripe(stripe){
