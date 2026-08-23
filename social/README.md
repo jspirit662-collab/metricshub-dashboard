@@ -95,7 +95,37 @@ Alternativa dentro de la UI de Postiz: `AI Assistant` en el editor
 (copies) y `Design with AI` con Polotno (portadas) — ambos usan tu
 `OPENAI_API_KEY` de `postiz.env`.
 
-## 6. Instagram Reels (incluidos Reels de prueba)
+## 6. Vídeo nativo por red (Reels / Shorts / TikTok / LinkedIn Video)
+
+Un mismo `.mp4` publicado a varias `integration_ids` sale **nativo** en
+cada red. Postiz aplica el formato correcto por endpoint:
+
+| Red             | Formato nativo          | Requisitos                                                                 |
+|-----------------|-------------------------|----------------------------------------------------------------------------|
+| Instagram       | Reel (o Trial Reel)     | MP4 H.264, 9:16, ≤ 90 s, ≤ 100 MB. Cuenta Business/Creator + FB Page       |
+| Facebook        | FB Reel                 | MP4, 9:16, 4-90 s. Página de FB (no perfil personal)                       |
+| TikTok          | Vídeo nativo            | MP4/MOV, 9:16, ≥ 3 s ≤ 10 min, caption ≤ 2 200 ch. App aprobada por TikTok |
+| YouTube         | Shorts si 9:16 y ≤ 60 s | MP4, título ≤ 100 ch, descripción ≤ 5 000 ch. OAuth con `youtube.upload`   |
+| LinkedIn        | Vídeo nativo            | MP4, ≤ 10 min, ≤ 5 GB, 256×144 – 4096×2304                                 |
+| X / Twitter     | Vídeo nativo            | MP4, ≤ 2:20 min (o ≤ 10 min con Premium), ≤ 512 MB                         |
+| Threads         | Vídeo nativo            | MP4, ≤ 5 min                                                                |
+| Pinterest       | Idea Pin / Video Pin    | MP4, 9:16 o 1:1, ≤ 15 min                                                   |
+
+Tips:
+
+- Grabá el máster en **1080×1920 (9:16), H.264, ≤ 60 s** → cubre IG
+  Reels, FB Reels, TikTok y YT Shorts a la vez desde un único fichero.
+- `bulk_publish.py` autodetecta `.mp4` y marca IG como `REELS`
+  (o `TRIAL_REEL` si el copy contiene "trial"). TikTok, YT, FB y
+  LinkedIn se publican como vídeo nativo sin flags extra — Postiz elige
+  el endpoint correcto por integración.
+- Para YouTube Shorts: si el vídeo es 9:16 y ≤ 60 s, YT lo clasifica
+  automáticamente como Short. No hay flag específico en la API.
+- Para TikTok: aprobación de app (`content.posting.publish` scope) puede
+  tardar; mientras tanto el vídeo sube a Inbox → tú lo publicas en la
+  app. Postiz lo indica en la UI.
+
+## 7. Instagram Reels (incluidos Reels de prueba)
 
 Postiz publica Reels **nativos** subiendo un `.mp4` al editor — usa la
 Instagram Graph API, así que:
@@ -116,7 +146,7 @@ Instagram Graph API, así que:
 Para lanzar Reels desde `bulk_publish.py`, apunta `media_path` a un
 `.mp4` (H.264, ≤ 90 s, ≤ 100 MB, aspect 9:16). Ejemplo en el CSV.
 
-## 7. Integraciones adicionales
+## 8. Integraciones adicionales
 
 - **n8n / Make / Zapier**: nodo oficial de Postiz — ideal si el disparo
   viene de otro sistema (Airtable, GHL, formulario…).

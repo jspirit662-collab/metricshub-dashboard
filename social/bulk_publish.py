@@ -139,9 +139,15 @@ def run(csv_path: str) -> None:
         scheduled = row.get("scheduled_at") or None
         kind = "schedule" if scheduled else "now"
 
-        # Detecta Reel: si media es .mp4 y toca IG/TikTok/YT/FB, marca modo Reel/Trial
+        # Vídeo nativo:
+        #   IG   → Reel (TRIAL_REEL si el copy dice "trial")
+        #   FB   → FB Reel (auto por Postiz)
+        #   TT   → vídeo TikTok nativo (auto)
+        #   YT   → Short si 9:16 y ≤60 s (auto por YouTube)
+        #   LNK  → vídeo LinkedIn nativo (auto)
+        # Solo IG necesita el flag REELS/TRIAL_REEL en el payload.
         reel_mode = None
-        if row.get("media_path", "").lower().endswith(".mp4"):
+        if row.get("media_path", "").lower().endswith((".mp4", ".mov")):
             reel_mode = "TRIAL_REEL" if "trial" in row.get("content", "").lower() else "REELS"
 
         try:
