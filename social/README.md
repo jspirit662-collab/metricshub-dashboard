@@ -13,15 +13,29 @@ Dribbble**.
 
 ## 1. Levantar el stack
 
+**Un solo comando** — el script comprueba Docker, genera un `JWT_SECRET`
+aleatorio, arranca el stack y abre el navegador:
+
 ```bash
 cd social
+./setup.sh
+```
+
+Requisito único: **Docker Desktop** instalado y corriendo
+(macOS/Windows) o `docker` + `docker compose` en Linux. Si no lo tenés,
+el script te da el enlace de descarga y sale sin tocar nada.
+
+Primer arranque: te pide crear el usuario admin en
+[http://localhost:4007](http://localhost:4007).
+
+### Modo manual (equivalente)
+
+```bash
 cp postiz.env.example postiz.env
-# editar postiz.env y rellenar JWT_SECRET + las OAuth de las redes que uses
+# editar postiz.env: JWT_SECRET + OAuth de las redes que uses
 docker compose up -d
 open http://localhost:4007
 ```
-
-Primer arranque: te pide crear el usuario admin.
 
 ## 2. Conectar cuentas
 
