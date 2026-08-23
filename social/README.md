@@ -58,19 +58,42 @@ Formato del CSV:
 Rate limit por defecto: **90 req/h** en self-host (100 en el cloud). El
 script deja 1 s entre posts para respetarlo.
 
-## 5. Copies y portadas por AI
+## 5. Wizard AI (copies + portadas automáticos)
 
-Con `OPENAI_API_KEY` en `postiz.env`:
+`ai_publish.py` toma un CSV de **temas** y para cada uno:
 
-- **Copies**: `AI Assistant` dentro del editor de post → genera el copy
-  adaptado a cada red (largo para LinkedIn, corto para X, hashtags para
-  IG, etc.).
-- **Portadas**: `Design with AI` usa Polotno + DALL·E; también puedes
-  subir plantilla propia y variar solo texto por post.
+1. Genera la **portada** con `gpt-image-1` (1024×1024) adaptada al
+   estilo que indiques.
+2. Detecta la red de cada `integration_id` y genera un **copy
+   específico**: LinkedIn largo con CTA, X con gancho y ≤260 ch, IG con
+   emojis y 8-12 hashtags, Threads hilo-friendly, TikTok energético,
+   Reddit sin hashtags, etc. — ver `NETWORK_SPECS` en el script.
+3. Sube la portada al bucket de Postiz y crea el post con contenido
+   distinto por red en una sola llamada a `/public/v1/posts`.
 
-Para automatizar generación masiva desde el CSV, extiende
-`bulk_publish.py` llamando a la Chat/Images API de OpenAI antes de
-`create_post`.
+```bash
+export POSTIZ_URL="http://localhost:4007"
+export POSTIZ_API_KEY="pk_xxx"
+export OPENAI_API_KEY="sk_xxx"
+python ai_publish.py topics.example.csv
+```
+
+Columnas del CSV:
+
+| columna           | qué es                                                          |
+|-------------------|-----------------------------------------------------------------|
+| `theme`           | Idea o tema central del post                                    |
+| `tone`            | Tono deseado (cercano, técnico, humor, autoridad…)              |
+| `integration_ids` | IDs Postiz de las cuentas destino (`;` separator)               |
+| `scheduled_at`    | ISO-8601 UTC; vacío = publicar ya                               |
+| `cover_style`     | Hint de estilo visual para la portada AI                        |
+
+Las portadas generadas se guardan también en `./generated-covers/` por
+si querés reutilizarlas o editarlas antes de publicar.
+
+Alternativa dentro de la UI de Postiz: `AI Assistant` en el editor
+(copies) y `Design with AI` con Polotno (portadas) — ambos usan tu
+`OPENAI_API_KEY` de `postiz.env`.
 
 ## 6. Instagram Reels (incluidos Reels de prueba)
 
