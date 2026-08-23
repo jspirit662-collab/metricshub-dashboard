@@ -1,0 +1,50 @@
+version: "3.9"
+
+# Postiz self-hosted — publicador multi-red social (IG, TikTok, YT, LinkedIn,
+# X, Facebook, Threads, Pinterest, Bluesky, Reddit, Mastodon, Discord, Slack,
+# Dribbble). Basado en gitroomhq/postiz-docker-compose.
+#
+# Levantar:   cp postiz.env.example postiz.env  &&  docker compose up -d
+# UI:         http://localhost:4007
+# API:        http://localhost:4007/public/v1
+#
+# Después: crear API key en Settings → API, y usarla con ../social/bulk_publish.py
+
+services:
+  postiz:
+    image: ghcr.io/gitroomhq/postiz-app:latest
+    container_name: postiz
+    restart: unless-stopped
+    depends_on:
+      - postiz-postgres
+      - postiz-redis
+    env_file: postiz.env
+    volumes:
+      - postiz-config:/config/
+      - postiz-uploads:/uploads/
+    ports:
+      - "4007:5000"
+
+  postiz-postgres:
+    image: postgres:17-alpine
+    container_name: postiz-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postiz-local
+      POSTGRES_PASSWORD: postiz-local-pwd
+      POSTGRES_DB: postiz-db-local
+    volumes:
+      - postgres-volume:/var/lib/postgresql/data
+
+  postiz-redis:
+    image: redis:7-alpine
+    container_name: postiz-redis
+    restart: unless-stopped
+    volumes:
+      - postiz-redis-data:/data
+
+volumes:
+  postgres-volume:
+  postiz-redis-data:
+  postiz-config:
+  postiz-uploads:
