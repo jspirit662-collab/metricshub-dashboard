@@ -224,6 +224,8 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        .chart-container canvas { max-width: 100%; }
+
         @media (max-width: 768px) {
             .sidebar { display: none; }
             .content { margin-left: 0; padding: 16px; }
@@ -231,6 +233,7 @@
             .overview-grid { grid-template-columns: 1fr; }
             .chart-grid { grid-template-columns: 1fr; }
             th, td { padding: 10px; font-size: 12px; }
+            .table-container table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         }
     </style>
 </head>
@@ -264,6 +267,10 @@
                 </a>
                 <a href="#" onclick="switchSection('athletes', this)">
                     <span class="nav-icon">🏃</span> TrainingPeaks
+                </a>
+                <div class="sidebar-section">Patrimonio</div>
+                <a href="#" onclick="switchSection('inversiones', this)">
+                    <span class="nav-icon">📈</span> Inversiones
                 </a>
             </div>
         </div>
@@ -499,6 +506,77 @@
                 </div>
             </div>
 
+            <!-- ====== INVERSIONES ====== -->
+            <div class="section" id="section-inversiones">
+                <div class="header-row">
+                    <div class="header-left">
+                        <h1>Inversiones</h1>
+                        <p id="invUpdate">Cartera personal · dos brókeres</p>
+                    </div>
+                </div>
+
+                <div class="sidebar-section" style="padding-left:0">🟢 MyInvestor · Fondos indexados</div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card coral"><div class="kpi-label">Total Aportado</div><div class="kpi-value" id="kpiInvTotal">€0</div><div class="kpi-sub" id="kpiInvRange">—</div></div>
+                    <div class="kpi-card blue"><div class="kpi-label">Valor Actual</div><div class="kpi-value" id="kpiInvValue">€0</div><div class="kpi-sub" id="kpiInvNavDate">—</div></div>
+                    <div class="kpi-card green"><div class="kpi-label">Plusvalía Latente</div><div class="kpi-value" id="kpiInvPnl">€0</div><div class="kpi-sub" id="kpiInvPnlPct">—</div></div>
+                    <div class="kpi-card purple"><div class="kpi-label">TER Ponderado</div><div class="kpi-value" id="kpiInvTer">—</div><div class="kpi-sub">Coste anual</div></div>
+                    <div class="kpi-card warn"><div class="kpi-label">Peso Tecnología</div><div class="kpi-value" id="kpiInvTech">—</div><div class="kpi-sub">Agregado 5 fondos</div></div>
+                    <div class="kpi-card"><div class="kpi-label">Aportaciones</div><div class="kpi-value" id="kpiInvCount">0</div><div class="kpi-sub" id="kpiInvPace">—</div></div>
+                </div>
+
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <h3>Aportado por fondo</h3>
+                        <canvas id="invFundChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Aportado por mes</h3>
+                        <canvas id="invMonthChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table><thead><tr>
+                        <th>Fondo</th><th>TER</th><th>Aportado</th><th>Valor actual</th><th>Plusvalía</th><th>% Cartera</th>
+                    </tr></thead><tbody id="invFundBody"></tbody></table>
+                </div>
+
+                <div class="table-container">
+                    <table><thead><tr>
+                        <th>Fecha</th><th>Producto</th><th>Aportado</th>
+                    </tr></thead><tbody id="invPPBody"></tbody></table>
+                </div>
+                <p style="font-size:12px;color:var(--muted);margin:-24px 0 32px;line-height:1.6">
+                    El plan de pensiones tributa distinto a un fondo (rescate solo en jubilación, no traspasable) y no está en el catálogo consultado para el resto de la página: solo se muestra lo aportado, sin valoración.
+                </p>
+
+                <div class="table-container">
+                    <table><thead><tr>
+                        <th>Fecha</th><th>Fondo</th><th>Importe</th><th>Participaciones</th><th>VL aplicado</th>
+                    </tr></thead><tbody id="invTxBody"></tbody></table>
+                </div>
+
+                <div class="sidebar-section" style="padding-left:0">🔵 Segundo bróker · ETFs y acciones</div>
+                <p style="font-size:12px;color:var(--muted);margin:0 0 16px;line-height:1.6">
+                    Cartera independiente de los fondos de MyInvestor. Los benchmarks miden <strong>solo</strong> esta parte; no consolidan ambos brókeres. <span id="invXsSource"></span>
+                </p>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card coral"><div class="kpi-label">Retorno Cartera 3a</div><div class="kpi-value" id="kpiXsRet">—</div></div>
+                    <div class="kpi-card blue"><div class="kpi-label">MSCI World 3a</div><div class="kpi-value" id="kpiXsMsci">—</div></div>
+                    <div class="kpi-card purple"><div class="kpi-label">S&P 500 3a</div><div class="kpi-value" id="kpiXsSp">—</div></div>
+                    <div class="kpi-card warn"><div class="kpi-label">Top 3 Concentración</div><div class="kpi-value" id="kpiXsTop3">—</div><div class="kpi-sub" id="kpiXsEffN">—</div></div>
+                </div>
+
+                <div class="table-container">
+                    <table><thead><tr>
+                        <th>Posición</th><th style="text-align:right">% Cartera</th>
+                    </tr></thead><tbody id="invPosBody"></tbody></table>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -637,6 +715,7 @@
         async function refreshAll() {
             await Promise.all([refreshAds(), refreshStripe(), refreshTP()]);
             updateOverview();
+            renderInversiones();
             updateTimestamp('overviewUpdate');
         }
 
@@ -1058,6 +1137,199 @@
         }
 
         // ===== INIT =====
+        // ===== INVERSIONES =====
+        // ISIN/TER/NAV verificados contra el catálogo de MyInvestor. Cada fondo se identificó
+        // cruzando el NAV del catálogo con el VL implícito (importe/participaciones) de las
+        // suscripciones. NAV a fecha INV_NAV_DATE.
+        const INV_NAV_DATE = '17/09/2026';
+        const INV_FUNDS = {
+            devworld: { name:'iShares Developed World ESG Screened Index Fund (IE) D Acc EUR', short:'iShares Dev. World ESG',
+                        isin:'IE000N51F726', ter:0.15, nav:12.199,   idx:'MSCI World Screened',     tech:33.37, color:'#1877F2' },
+            isem:     { name:'iShares Emerging Markets Index Fund (IE) Acc EUR clase S',       short:'iShares Emerging Mkts',
+                        isin:'IE000QAZP7L2', ter:0.16, nav:13.849,   idx:'MSCI Emerging Markets',  tech:42.43, color:'#16A34A' },
+            europe:   { name:'Vanguard European Stock Index Fund EUR Acc',                     short:'Vanguard European Stock',
+                        isin:'IE0007987708', ter:0.12, nav:42.2615,  idx:'MSCI Europe',            tech:9.20,  color:'#7C3AED' },
+            smallcap: { name:'Vanguard Global Small-Cap Index Fund EUR Acc',                   short:'Vanguard Global Small-Cap',
+                        isin:'IE00B42W4L06', ter:0.30, nav:426.8515, idx:'MSCI World Small Cap',   tech:15.19, color:'#FF6248' },
+            vgem:     { name:'Vanguard Emerging Markets Stock Index Fund EUR Acc',             short:'Vanguard Emerging Mkts',
+                        isin:'IE0031786696', ter:0.23, nav:309.3103, idx:'MSCI Emerging Markets',  tech:41.99, color:'#D97706' }
+        };
+
+        // Suscripciones finalizadas. `est:true` = participaciones estimadas por interpolación de VL
+        // (el movimiento de cuenta no las mostraba).
+        const INV_TX = [
+            { d:'2026-06-10', f:'smallcap', amt:200,     p:0.47 },
+            { d:'2026-06-11', f:'europe',   amt:500,     p:12.04 },
+            { d:'2026-06-13', f:'devworld', amt:900,     p:75.85 },
+            { d:'2026-06-14', f:'vgem',     amt:250,     p:0.78 },
+            { d:'2026-06-20', f:'devworld', amt:900,     p:75.83 },
+            { d:'2026-06-24', f:'smallcap', amt:200,     p:0.45 },
+            { d:'2026-06-25', f:'europe',   amt:500,     p:11.97 },
+            { d:'2026-06-26', f:'devworld', amt:2000,    p:166.68 },
+            { d:'2026-06-26', f:'isem',     amt:3000,    p:212.18 },
+            { d:'2026-06-26', f:'europe',   amt:2000,    p:47.83 },
+            { d:'2026-06-26', f:'smallcap', amt:2000,    p:4.6 },
+            { d:'2026-06-27', f:'devworld', amt:900,     p:75 },
+            { d:'2026-06-28', f:'vgem',     amt:250,     p:0.79 },
+            { d:'2026-06-29', f:'smallcap', amt:195.68,  p:0.45,   est:true },
+            { d:'2026-07-01', f:'vgem',     amt:248.84,  p:0.79,   est:true },
+            { d:'2026-07-04', f:'devworld', amt:900,     p:74.69 },
+            { d:'2026-07-08', f:'smallcap', amt:200,     p:0.46 },
+            { d:'2026-07-11', f:'devworld', amt:900,     p:74.52 },
+            { d:'2026-07-12', f:'vgem',     amt:250,     p:0.82 },
+            { d:'2026-07-18', f:'devworld', amt:900,     p:74.62 },
+            { d:'2026-07-22', f:'smallcap', amt:200,     p:0.46 },
+            { d:'2026-07-25', f:'devworld', amt:900,     p:75.05 },
+            { d:'2026-07-26', f:'vgem',     amt:250,     p:0.85 },
+            { d:'2026-08-01', f:'devworld', amt:900,     p:73.24 },
+            { d:'2026-08-10', f:'smallcap', amt:200,     p:0.45 },
+            { d:'2026-08-12', f:'devworld', amt:900,     p:73.06 },
+            { d:'2026-08-12', f:'vgem',     amt:250,     p:0.82 },
+            { d:'2026-08-18', f:'europe',   amt:300,     p:7.17,   est:true },
+            { d:'2026-08-18', f:'isem',     amt:300,     p:21.64,  est:true },
+            { d:'2026-08-24', f:'smallcap', amt:199.76,  p:0.46 },
+            { d:'2026-09-03', f:'devworld', amt:1799.90, p:148.25 },
+            { d:'2026-09-07', f:'smallcap', amt:199.43,  p:0.46 },
+            { d:'2026-09-16', f:'isem',     amt:299.92,  p:21.87 },
+            { d:'2026-09-17', f:'europe',   amt:299.99,  p:7.16 },
+            { d:'2026-09-17', f:'devworld', amt:1799.88, p:149.46 }
+        ];
+
+        // Plan de pensiones: producto distinto, fuera del catálogo de fondos, sin NAV disponible.
+        const INV_PP_TX = [
+            { d:'2026-06-30', name:'MyInvestor Indexado S&P 500 PP', amt:150 }
+        ];
+
+        // Snapshot del segundo bróker (ximescanellas.com/inversiones). Respaldo cuando el proxy
+        // no alcanza el dominio; los datos en vivo lo sobreescriben.
+        const INV_XS = {
+            date:'09/08/2026',
+            benchmark:{ cartera:38.2, msci_world:66.5, sp500:69.7 },
+            conc:{ top1:15.3, top3:42.1, top5:61.1, effN:11 },
+            positions:[
+                { n:'Vanguard S&P 500 UCITS', pct:15.3 }, { n:'Alphabet Inc Class A', pct:13.0 },
+                { n:'Apple Inc (USD)', pct:9.1 },         { n:'iShares Physical Gold', pct:4.8 },
+                { n:'VanEck Semiconductor', pct:2.6 },    { n:'Telefónica SA', pct:2.2 },
+                { n:'Realty Income Corp', pct:1.4 },      { n:'Vanguard Emerging Markets', pct:1.2 },
+                { n:'iShares Core S&P 500', pct:1.2 },    { n:'Vanguard FTSE All-World', pct:1.1 }
+            ]
+        };
+
+        const INV_MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        const invDate = iso => { const [y,m,d] = iso.split('-'); return `${d} ${INV_MONTHS[+m-1]} ${y}`; };
+        const invNum = (v, dec=2) => Number(v).toLocaleString('es-ES', { minimumFractionDigits:dec, maximumFractionDigits:dec });
+
+        function renderInversiones() {
+            const tx = [...INV_TX].sort((a,b) => a.d.localeCompare(b.d));
+            if (!tx.length) return;
+
+            const total = tx.reduce((s,t) => s + t.amt, 0);
+            const byFund = {}, byMonth = {};
+            tx.forEach(t => {
+                const f = byFund[t.f] || (byFund[t.f] = { amt:0, parts:0, n:0 });
+                f.amt += t.amt; f.parts += t.p; f.n++;
+                const mk = t.d.slice(0,7);
+                byMonth[mk] = (byMonth[mk] || 0) + t.amt;
+            });
+
+            const monthKeys = Object.keys(byMonth).sort();
+            const fundKeys = Object.keys(byFund).sort((a,b) => byFund[b].amt - byFund[a].amt);
+
+            fundKeys.forEach(k => { byFund[k].val = byFund[k].parts * INV_FUNDS[k].nav; });
+            const value = fundKeys.reduce((s,k) => s + byFund[k].val, 0);
+            const pnl = value - total, pnlPct = total ? pnl/total*100 : 0;
+            const terW  = fundKeys.reduce((s,k) => s + INV_FUNDS[k].ter  * byFund[k].val, 0) / (value||1);
+            const techW = fundKeys.reduce((s,k) => s + INV_FUNDS[k].tech * byFund[k].val, 0) / (value||1);
+
+            const set = (id,v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+            set('kpiInvTotal', eur(total));
+            set('kpiInvRange', `${invDate(tx[0].d)} → ${invDate(tx[tx.length-1].d)}`);
+            set('kpiInvValue', eur(value));
+            set('kpiInvNavDate', `NAV a ${INV_NAV_DATE}`);
+            set('kpiInvPnl', (pnl>=0?'+':'−') + eur(Math.abs(pnl)));
+            set('kpiInvPnlPct', `${pnl>=0?'+':'−'}${Math.abs(pnlPct).toFixed(2)}% sobre lo aportado`);
+            const pnlEl = document.getElementById('kpiInvPnl');
+            if (pnlEl) pnlEl.style.color = pnl>=0 ? 'var(--green)' : '#DC2626';
+            set('kpiInvTer', terW.toFixed(2) + '%');
+            set('kpiInvTech', techW.toFixed(1) + '%');
+            set('kpiInvCount', tx.length);
+            set('kpiInvPace', `${eur(total/monthKeys.length)}/mes de media`);
+
+            if (charts.invFund) charts.invFund.destroy();
+            charts.invFund = new Chart(document.getElementById('invFundChart'), {
+                type:'doughnut',
+                data:{
+                    labels: fundKeys.map(k => `${INV_FUNDS[k].short} (${(byFund[k].amt/total*100).toFixed(1)}%)`),
+                    datasets:[{ data: fundKeys.map(k => byFund[k].amt), backgroundColor: fundKeys.map(k => INV_FUNDS[k].color), borderWidth:0 }]
+                },
+                options:{ responsive:true, plugins:{ legend:{ position:'bottom', labels:{ font:{size:11}, boxWidth:12 } } } }
+            });
+
+            if (charts.invMonth) charts.invMonth.destroy();
+            charts.invMonth = new Chart(document.getElementById('invMonthChart'), {
+                type:'bar',
+                data:{
+                    labels: monthKeys.map(k => `${INV_MONTHS[+k.slice(5)-1]} ${k.slice(0,4)}`),
+                    datasets:[{ label:'Aportado €', data: monthKeys.map(k => byMonth[k]), backgroundColor:'#16A34A', borderWidth:0, borderRadius:4 }]
+                },
+                options:{ responsive:true, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } }
+            });
+
+            document.getElementById('invFundBody').innerHTML = fundKeys.map(k => {
+                const f = byFund[k], fu = INV_FUNDS[k];
+                const p = f.val - f.amt, pp = f.amt ? p/f.amt*100 : 0;
+                return `<tr>
+                    <td><strong>${fu.name}</strong><div style="font-size:11px;color:var(--muted);margin-top:2px">${fu.isin} · ${fu.idx}</div></td>
+                    <td>${fu.ter.toFixed(2)}%</td>
+                    <td><strong>${eur(f.amt)}</strong><div style="font-size:11px;color:var(--muted)">${f.n} ops · ${invNum(f.parts)} part.</div></td>
+                    <td><strong>${eur(f.val)}</strong><div style="font-size:11px;color:var(--muted)">VL €${invNum(fu.nav)}</div></td>
+                    <td style="color:${p>=0?'var(--green)':'#DC2626'}"><strong>${p>=0?'+':'−'}${eur(Math.abs(p))}</strong><div style="font-size:11px">${p>=0?'+':'−'}${Math.abs(pp).toFixed(1)}%</div></td>
+                    <td>${(f.val/value*100).toFixed(1)}%</td>
+                </tr>`;
+            }).join('') + `<tr style="background:var(--surface-light)">
+                    <td><strong>TOTAL</strong> <span style="color:var(--muted);font-size:11px">· ${tx.length} ops en ${monthKeys.length} meses</span></td>
+                    <td><strong>${terW.toFixed(2)}%</strong></td>
+                    <td><strong>${eur(total)}</strong></td>
+                    <td><strong>${eur(value)}</strong></td>
+                    <td style="color:${pnl>=0?'var(--green)':'#DC2626'}"><strong>${pnl>=0?'+':'−'}${eur(Math.abs(pnl))}</strong><div style="font-size:11px">${pnl>=0?'+':'−'}${Math.abs(pnlPct).toFixed(2)}%</div></td>
+                    <td><strong>100%</strong></td>
+                </tr>`;
+
+            document.getElementById('invPPBody').innerHTML = [...INV_PP_TX].sort((a,b) => b.d.localeCompare(a.d)).map(t => `<tr>
+                    <td style="white-space:nowrap">${invDate(t.d)}</td>
+                    <td><strong>🏦 ${t.name}</strong></td>
+                    <td style="color:var(--green)"><strong>+${eur(t.amt)}</strong></td>
+                </tr>`).join('');
+
+            document.getElementById('invTxBody').innerHTML = [...tx].reverse().map(t => {
+                const fu = INV_FUNDS[t.f];
+                const estTag = t.est ? ' <span title="Participaciones estimadas por interpolación de VL" style="color:var(--warn);cursor:help">≈</span>' : '';
+                return `<tr>
+                    <td style="white-space:nowrap">${invDate(t.d)}</td>
+                    <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${fu.color};margin-right:7px"></span>${fu.short}</td>
+                    <td style="color:var(--green)"><strong>+${eur(t.amt)}</strong></td>
+                    <td>${invNum(t.p)}${estTag}</td>
+                    <td>€${invNum(t.amt/t.p)}</td>
+                </tr>`;
+            }).join('');
+
+            const pct = v => (v>0?'+':'') + v + '%';
+            set('kpiXsRet',  pct(INV_XS.benchmark.cartera));
+            set('kpiXsMsci', pct(INV_XS.benchmark.msci_world));
+            set('kpiXsSp',   pct(INV_XS.benchmark.sp500));
+            set('kpiXsTop3', INV_XS.conc.top3 + '%');
+            set('kpiXsEffN', `Nº efectivo: ${INV_XS.conc.effN} posiciones`);
+            set('invXsSource', `Snapshot manual del ${INV_XS.date}.`);
+
+            const mx = INV_XS.positions[0] ? INV_XS.positions[0].pct : 1;
+            document.getElementById('invPosBody').innerHTML = INV_XS.positions.map(p => `<tr>
+                    <td><strong>${p.n}</strong>
+                        <div style="background:var(--surface-light);border-radius:4px;height:6px;margin-top:4px;max-width:340px"><div style="height:6px;border-radius:4px;background:#1877F2;width:${(p.pct/mx*100).toFixed(0)}%"></div></div>
+                    </td>
+                    <td style="text-align:right"><strong>${p.pct.toFixed(1)}%</strong></td>
+                </tr>`).join('');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             if (sessionStorage.getItem('auth')) {
                 showDashboard();
