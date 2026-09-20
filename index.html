@@ -97,7 +97,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
 .cc{background:var(--surface);border:1.5px solid var(--borderL);border-radius:var(--r);padding:18px 20px;box-shadow:var(--sh)}
 .cc h3{font-size:13px;font-weight:700;color:var(--text);margin-bottom:13px}
 .cc h3 small{color:var(--muted);font-weight:400;font-size:11px;margin-left:5px}
-.cw{position:relative}.h220{height:220px}.h250{height:250px}.h200{height:200px}.h180{height:180px}
+.cw{position:relative}.cw canvas{max-width:100%}.h220{height:220px}.h250{height:250px}.h200{height:200px}.h180{height:180px}
 
 /* FUNNEL */
 .fv{padding:6px 0}
@@ -177,6 +177,14 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
   .g2,.g3,.g3r,.sc2{grid-template-columns:1fr}
   .kpi-g{grid-template-columns:repeat(2,1fr)}
   .highlight-row{grid-template-columns:repeat(2,1fr)}
+  .tc table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+}
+@media(max-width:520px){
+  .topbar{flex-wrap:wrap;row-gap:10px}
+  .topbar-r{width:100%;flex-wrap:wrap;justify-content:flex-start}
+  .date-range{flex:1 1 auto;min-width:0}
+  .date-range input[type=date]{width:auto;min-width:0;flex:1}
+  .ref-btn{flex:1 1 auto;justify-content:center}
 }
 </style>
 </head>
@@ -200,6 +208,7 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
     <button class="ni" onclick="nav('ig',this)"><span class="ni-ico">📸</span><span>Instagram</span></button>
     <button class="ni" onclick="nav('meta',this)"><span class="ni-ico">🔵</span><span>Meta Ads</span></button>
     <button class="ni" onclick="nav('stripe',this)"><span class="ni-ico">💳</span><span>Stripe</span></button>
+    <button class="ni" onclick="nav('inv',this)"><span class="ni-ico">📈</span><span>Inversiones</span></button>
   </div>
   <div class="sb-grp">
     <div class="sb-lbl">Negocio</div>
@@ -563,6 +572,96 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
       </h3>
       <table><thead><tr><th>Cliente</th><th>Importe</th><th>Método</th><th>Estrategia</th><th>Fecha</th><th>Notas</th><th></th></tr></thead>
       <tbody id="mp-tb"><tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">Sin pagos manuales aún. Pulsa "+ Añadir" para registrar un Bizum o transferencia.</td></tr></tbody></table>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════
+       INVERSIONES
+  ═══════════════════════════ -->
+  <section id="sec-inv" class="sec">
+
+    <!-- ───── BRÓKER 1 · MYINVESTOR ───── -->
+    <div class="fsec" style="margin-bottom:12px;font-size:14px">🟢 MyInvestor <span style="font-weight:400;color:var(--muted);font-size:12px">· Fondos indexados traspasables</span></div>
+
+    <div class="kpi-g">
+      <div class="kpi kc-ok"><div class="kpi-ico">💶</div><div class="kpi-lbl">Total Aportado</div><div class="kpi-val" id="inv-total">—</div><div class="kpi-d" id="inv-range">—</div></div>
+      <div class="kpi kc-ok"><div class="kpi-ico">📊</div><div class="kpi-lbl">Valor Actual</div><div class="kpi-val" id="inv-value">—</div><div class="kpi-d" id="inv-value-d">—</div></div>
+      <div class="kpi kc-ok"><div class="kpi-ico">📈</div><div class="kpi-lbl">Plusvalía Latente</div><div class="kpi-val" id="inv-pnl">—</div><div class="kpi-d" id="inv-pnl-d">—</div></div>
+      <div class="kpi kc-coral"><div class="kpi-ico">💸</div><div class="kpi-lbl">TER Ponderado</div><div class="kpi-val" id="inv-ter">—</div><div class="kpi-d">Coste anual de la cartera</div></div>
+      <div class="kpi kc-coral"><div class="kpi-ico">💻</div><div class="kpi-lbl">Peso Tecnología</div><div class="kpi-val" id="inv-tech">—</div><div class="kpi-d">Agregado de los 5 fondos</div></div>
+      <div class="kpi kc-coral"><div class="kpi-ico">🧾</div><div class="kpi-lbl">Nº Aportaciones</div><div class="kpi-val" id="inv-count">—</div><div class="kpi-d">Suscripciones finalizadas</div></div>
+      <div class="kpi kc-coral"><div class="kpi-ico">📐</div><div class="kpi-lbl">Aportación Media</div><div class="kpi-val" id="inv-avg">—</div><div class="kpi-d">Por operación</div></div>
+      <div class="kpi kc-coral"><div class="kpi-ico">🗂️</div><div class="kpi-lbl">Fondos Distintos</div><div class="kpi-val" id="inv-funds">—</div><div class="kpi-d">En cartera indexada</div></div>
+      <div class="kpi kc-ok"><div class="kpi-ico">📅</div><div class="kpi-lbl">Ritmo Mensual</div><div class="kpi-val sm" id="inv-pace">—</div><div class="kpi-d">Media de aportación/mes</div></div>
+    </div>
+
+    <div class="cg g2">
+      <div class="cc">
+        <h3>Aportado por fondo <small>MyInvestor</small></h3>
+        <div class="cw h250"><canvas id="ch-inv-fund"></canvas></div>
+      </div>
+      <div class="cc">
+        <h3>Aportado por mes</h3>
+        <div class="cw h250"><canvas id="ch-inv-month"></canvas></div>
+      </div>
+    </div>
+
+    <div class="tc">
+      <h3>Desglose por fondo <small style="font-weight:400;color:var(--muted)">— ISIN, TER y valoración del catálogo MyInvestor</small></h3>
+      <table>
+        <thead><tr><th style="width:32%">Fondo</th><th>TER</th><th>Aportado</th><th>Valor actual</th><th>Plusvalía</th><th>% Cartera</th></tr></thead>
+        <tbody id="inv-fund-tb"></tbody>
+      </table>
+    </div>
+
+    <!-- Plan de pensiones — producto distinto, fuera del catálogo de fondos de MyInvestor -->
+    <div class="tc" id="pp-wrap">
+      <h3>🏦 Plan de Pensiones <small style="font-weight:400;color:var(--muted)">— MyInvestor Indexado S&P 500 PP, fuera del catálogo de fondos</small></h3>
+      <table>
+        <thead><tr><th>Fecha</th><th>Producto</th><th>Aportado</th></tr></thead>
+        <tbody id="pp-tb"></tbody>
+      </table>
+      <p style="font-size:11.5px;color:var(--muted);padding:0 18px 14px;line-height:1.6">
+        Un plan de pensiones tributa distinto a un fondo (rescate solo en jubilación u otras contingencias, y no es traspasable a un fondo indexado) — por eso va aparte. No está en el catálogo consultado para el resto de esta página, así que solo se muestra lo aportado; no hay NAV para calcular valor actual ni rentabilidad.
+      </p>
+    </div>
+
+    <div class="tc">
+      <h3>Historial de aportaciones <small style="font-weight:400;color:var(--muted)">— suscripciones puntuales</small></h3>
+      <table>
+        <thead><tr><th>Fecha</th><th>Fondo</th><th>Importe</th><th>Participaciones</th><th>VL aplicado</th></tr></thead>
+        <tbody id="inv-tx-tb"></tbody>
+      </table>
+    </div>
+
+    <!-- ───── BRÓKER 2 · ETFs + ACCIONES (vía dashboard ximescanellas) ───── -->
+    <hr class="dv" style="margin:26px 0 18px">
+    <div class="fsec" style="margin-bottom:4px;font-size:14px">🔵 Segundo bróker <span style="font-weight:400;color:var(--muted);font-size:12px">· ETFs y acciones — vía dashboard de ximescanellas.com</span></div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Cartera independiente de los fondos de MyInvestor. Los benchmarks de abajo miden <strong>sólo</strong> esta parte; no consolidan ambos brókeres.</p>
+
+    <div class="kpi-g">
+      <div class="kpi kc-coral"><div class="kpi-ico">📈</div><div class="kpi-lbl">Retorno Cartera</div><div class="kpi-val" id="inv-ret">—</div><div class="kpi-d">3 años</div></div>
+      <div class="kpi kc-coral"><div class="kpi-ico">🏆</div><div class="kpi-lbl">MSCI World 3a</div><div class="kpi-val" id="inv-msci">—</div><div class="kpi-d">Benchmark</div></div>
+      <div class="kpi kc-coral"><div class="kpi-ico">📊</div><div class="kpi-lbl">S&P 500 3a</div><div class="kpi-val" id="inv-sp500">—</div><div class="kpi-d">Benchmark</div></div>
+      <div class="kpi kc-ok"><div class="kpi-ico">📉</div><div class="kpi-lbl">CAGR Estimado</div><div class="kpi-val" id="inv-cagr">—</div><div class="kpi-d">3 años DCA</div></div>
+    </div>
+    <div class="cg g2">
+      <div class="cc">
+        <h3>Comparativa de Benchmarks <small id="inv-bench-src">—</small></h3>
+        <div class="cw h250"><canvas id="ch-inv-bench"></canvas></div>
+      </div>
+      <div class="cc">
+        <h3>Riesgo de concentración <small>% del valor de la cartera</small></h3>
+        <div class="cw h250"><canvas id="ch-inv-conc"></canvas></div>
+      </div>
+    </div>
+
+    <div class="tc">
+      <h3>Posiciones por valor <span id="inv-conc-badges" style="float:right;font-weight:400"></span></h3>
+      <table>
+        <thead><tr><th>Posición</th><th style="text-align:right">% Cartera</th></tr></thead>
+        <tbody id="inv-pos-tb"></tbody>
+      </table>
     </div>
   </section>
 </main>
@@ -1175,6 +1274,235 @@ function rMeta(d){
   }
 }
 
+// ── MYINVESTOR — CATÁLOGO DE FONDOS ──
+// ISIN/TER/NAV verificados contra el catálogo de MyInvestor. Cada fondo se
+// identificó cruzando el NAV del catálogo con el VL implícito (importe/participaciones)
+// de las suscripciones. NAV a fecha MI_NAV_DATE.
+const MI_NAV_DATE='17/09/2026';
+const MI_FUNDS={
+  devworld:{name:'iShares Developed World ESG Screened Index Fund (IE) D Acc EUR',short:'iShares Dev. World ESG',
+            isin:'IE000N51F726',ter:0.15,nav:12.199,  idx:'MSCI World Screened',tech:33.37,color:ME},
+  isem    :{name:'iShares Emerging Markets Index Fund (IE) Acc EUR clase S',short:'iShares Emerging Mkts',
+            isin:'IE000QAZP7L2',ter:0.16,nav:13.849,  idx:'MSCI Emerging Markets',tech:42.43,color:OK},
+  europe  :{name:'Vanguard European Stock Index Fund EUR Acc',short:'Vanguard European Stock',
+            isin:'IE0007987708',ter:0.12,nav:42.2615, idx:'MSCI Europe',tech:9.20,color:ST},
+  smallcap:{name:'Vanguard Global Small-Cap Index Fund EUR Acc',short:'Vanguard Global Small-Cap',
+            isin:'IE00B42W4L06',ter:0.30,nav:426.8515,idx:'MSCI World Small Cap',tech:15.19,color:CO},
+  vgem    :{name:'Vanguard Emerging Markets Stock Index Fund EUR Acc',short:'Vanguard Emerging Mkts',
+            isin:'IE0031786696',ter:0.23,nav:309.3103,idx:'MSCI Emerging Markets',tech:41.99,color:WA}
+};
+
+// ── MYINVESTOR — APORTACIONES (suscripciones finalizadas) ──
+// Fuente: app MyInvestor → Fondos de inversión. Importes en €, participaciones tal cual.
+const MI_TX=[
+  {d:'2026-06-10',f:'smallcap',amt:200,  p:0.47},
+  {d:'2026-06-11',f:'europe',  amt:500,  p:12.04},
+  {d:'2026-06-13',f:'devworld',amt:900,  p:75.85},
+  {d:'2026-06-14',f:'vgem',    amt:250,  p:0.78},
+  {d:'2026-06-20',f:'devworld',amt:900,  p:75.83},
+  {d:'2026-06-24',f:'smallcap',amt:200,  p:0.45},
+  {d:'2026-06-25',f:'europe',  amt:500,  p:11.97},
+  {d:'2026-06-26',f:'devworld',amt:2000, p:166.68},
+  {d:'2026-06-26',f:'isem',    amt:3000, p:212.18},
+  {d:'2026-06-26',f:'europe',  amt:2000, p:47.83},
+  {d:'2026-06-26',f:'smallcap',amt:2000, p:4.6},
+  {d:'2026-06-27',f:'devworld',amt:900,  p:75},
+  {d:'2026-06-29',f:'smallcap',amt:195.68,p:0.45,est:true},
+  {d:'2026-06-28',f:'vgem',    amt:250,  p:0.79},
+  {d:'2026-07-01',f:'vgem',    amt:248.84,p:0.79,est:true},
+  {d:'2026-07-04',f:'devworld',amt:900,  p:74.69},
+  {d:'2026-07-08',f:'smallcap',amt:200,  p:0.46},
+  {d:'2026-07-11',f:'devworld',amt:900,  p:74.52},
+  {d:'2026-07-12',f:'vgem',    amt:250,  p:0.82},
+  {d:'2026-07-18',f:'devworld',amt:900,  p:74.62},
+  {d:'2026-07-22',f:'smallcap',amt:200,  p:0.46},
+  {d:'2026-07-25',f:'devworld',amt:900,  p:75.05},
+  {d:'2026-07-26',f:'vgem',    amt:250,  p:0.85},
+  {d:'2026-08-01',f:'devworld',amt:900,  p:73.24},
+  {d:'2026-08-10',f:'smallcap',amt:200,   p:0.45},
+  {d:'2026-08-12',f:'devworld',amt:900,   p:73.06},
+  {d:'2026-08-12',f:'vgem',    amt:250,   p:0.82},
+  {d:'2026-08-18',f:'europe',  amt:300,   p:7.17,  est:true},
+  {d:'2026-08-18',f:'isem',    amt:300,   p:21.64, est:true},
+  {d:'2026-08-24',f:'smallcap',amt:199.76,p:0.46},
+  {d:'2026-09-03',f:'devworld',amt:1799.90,p:148.25},
+  {d:'2026-09-07',f:'smallcap',amt:199.43,p:0.46},
+  {d:'2026-09-16',f:'isem',    amt:299.92,p:21.87},
+  {d:'2026-09-17',f:'europe',  amt:299.99,p:7.16},
+  {d:'2026-09-17',f:'devworld',amt:1799.88,p:149.46}
+];
+
+const MI_MONTHS=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const fmtDate=iso=>{const[y,m,dd]=iso.split('-');return `${dd} ${MI_MONTHS[+m-1]} ${y}`};
+const fmtNum=(v,dec=2)=>Number(v).toLocaleString('es-ES',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+
+// ── PLAN DE PENSIONES — fuera del catálogo de fondos, sin NAV disponible ──
+const MI_PP_TX=[
+  {d:'2026-06-30',name:'MyInvestor Indexado S&P 500 PP',amt:150}
+];
+function rPensionPlan(){
+  const tb=document.getElementById('pp-tb');
+  if(!tb)return;
+  tb.innerHTML=[...MI_PP_TX].sort((a,b)=>b.d.localeCompare(a.d)).map(t=>`<tr>
+    <td style="color:var(--muted);white-space:nowrap">${fmtDate(t.d)}</td>
+    <td style="font-weight:600;color:var(--text)">${t.name}</td>
+    <td style="font-weight:700;color:var(--ok)">+${eur(t.amt)}</td>
+  </tr>`).join('');
+}
+
+function rMyInvestor(){
+  const tx=[...MI_TX].sort((a,b)=>a.d.localeCompare(b.d));
+  if(!tx.length)return;
+
+  const total=tx.reduce((s,t)=>s+t.amt,0);
+  const byFund={},byMonth={};
+  tx.forEach(t=>{
+    const f=byFund[t.f]||(byFund[t.f]={amt:0,parts:0,n:0});
+    f.amt+=t.amt; f.parts+=t.p; f.n++;
+    const mk_=t.d.slice(0,7);
+    byMonth[mk_]=(byMonth[mk_]||0)+t.amt;
+  });
+
+  const monthKeys=Object.keys(byMonth).sort();
+  const fundKeys=Object.keys(byFund).sort((a,b)=>byFund[b].amt-byFund[a].amt);
+
+  // ── Valoración a NAV de catálogo ──
+  fundKeys.forEach(k=>{byFund[k].val=byFund[k].parts*MI_FUNDS[k].nav;});
+  const value=fundKeys.reduce((s,k)=>s+byFund[k].val,0);
+  const pnl=value-total, pnlPct=total?pnl/total*100:0;
+  const terW=fundKeys.reduce((s,k)=>s+MI_FUNDS[k].ter*byFund[k].val,0)/(value||1);
+  const techW=fundKeys.reduce((s,k)=>s+MI_FUNDS[k].tech*byFund[k].val,0)/(value||1);
+
+  // ── KPIs ──
+  setKpi('inv-total',eur(total));
+  setKpi('inv-count',tx.length);
+  setKpi('inv-avg',eur(total/tx.length));
+  setKpi('inv-funds',fundKeys.length);
+  setKpi('inv-pace',eur(total/monthKeys.length));
+  setKpi('inv-range',`${fmtDate(tx[0].d)} → ${fmtDate(tx[tx.length-1].d)}`);
+  setKpi('inv-value',eur(value));
+  setKpi('inv-value-d',`NAV a ${MI_NAV_DATE}`);
+  setKpi('inv-pnl',(pnl>=0?'+':'−')+eur(Math.abs(pnl)));
+  setKpi('inv-pnl-d',`${pnl>=0?'+':'−'}${Math.abs(pnlPct).toFixed(2)}% sobre lo aportado`);
+  const pnlEl=document.getElementById('inv-pnl');
+  if(pnlEl)pnlEl.style.color=pnl>=0?'var(--ok)':'var(--err)';
+  setKpi('inv-ter',terW.toFixed(2)+'%');
+  setKpi('inv-tech',techW.toFixed(1)+'%');
+
+  // ── Charts ──
+  mk('ch-inv-fund','doughnut',{
+    labels:fundKeys.map(k=>`${MI_FUNDS[k].short} (${(byFund[k].amt/total*100).toFixed(1)}%)`),
+    datasets:[{data:fundKeys.map(k=>byFund[k].amt),backgroundColor:fundKeys.map(k=>MI_FUNDS[k].color+'CC'),borderWidth:0,hoverOffset:5}]
+  },{plugins:{legend:{position:'bottom',labels:{color:'#9C8A84',font:{size:10},boxWidth:10}}}});
+
+  mk('ch-inv-month','bar',{
+    labels:monthKeys.map(k=>`${MI_MONTHS[+k.slice(5)-1]} ${k.slice(0,4)}`),
+    datasets:[{label:'Aportado €',data:monthKeys.map(k=>byMonth[k]),backgroundColor:OK+'88',borderRadius:5}]
+  });
+
+  // ── Tabla por fondo ──
+  document.getElementById('inv-fund-tb').innerHTML=fundKeys.map(k=>{
+    const f=byFund[k],fu=MI_FUNDS[k];
+    const p=f.val-f.amt, pp=f.amt?p/f.amt*100:0;
+    return `<tr>
+      <td style="font-weight:600;color:var(--text)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${fu.color};margin-right:7px"></span>${fu.name}
+        <div style="font-size:11px;color:var(--muted);font-weight:400;margin-top:2px">${fu.isin} · ${fu.idx}</div>
+      </td>
+      <td><span class="bdg ${fu.ter<=0.2?'bg':'bw'}">${fu.ter.toFixed(2)}%</span></td>
+      <td style="font-weight:700;color:var(--textM)">${eur(f.amt)}<div style="font-size:11px;color:var(--muted);font-weight:400">${f.n} ops · ${fmtNum(f.parts)} part.</div></td>
+      <td style="font-weight:700;color:var(--text)">${eur(f.val)}<div style="font-size:11px;color:var(--muted);font-weight:400">VL €${fmtNum(fu.nav)}</div></td>
+      <td style="font-weight:700;color:${p>=0?'var(--ok)':'var(--err)'}">${p>=0?'+':'−'}${eur(Math.abs(p))}<div style="font-size:11px;font-weight:400">${p>=0?'+':'−'}${Math.abs(pp).toFixed(1)}%</div></td>
+      <td><span class="bdg bc">${(f.val/value*100).toFixed(1)}%</span></td>
+    </tr>`;
+  }).join('')+`<tr style="background:var(--surface2)">
+      <td style="font-weight:700;color:var(--text)">TOTAL <span style="font-weight:400;color:var(--muted);font-size:11px">· ${tx.length} ops en ${monthKeys.length} meses</span></td>
+      <td><span class="bdg bg">${terW.toFixed(2)}%</span></td>
+      <td style="font-weight:800;color:var(--textM)">${eur(total)}</td>
+      <td style="font-weight:800;color:var(--text)">${eur(value)}</td>
+      <td style="font-weight:800;color:${pnl>=0?'var(--ok)':'var(--err)'}">${pnl>=0?'+':'−'}${eur(Math.abs(pnl))}<div style="font-size:11px;font-weight:400">${pnl>=0?'+':'−'}${Math.abs(pnlPct).toFixed(2)}%</div></td>
+      <td><span class="bdg bm">100%</span></td>
+    </tr>`;
+
+  // ── Historial (más reciente primero) ──
+  document.getElementById('inv-tx-tb').innerHTML=[...tx].reverse().map(t=>{
+    const fu=MI_FUNDS[t.f];
+    const estTag=t.est?' <span title="Participaciones estimadas por interpolación de VL — el movimiento de cuenta no muestra participaciones" style="color:var(--warn);cursor:help">≈</span>':'';
+    return `<tr>
+      <td style="color:var(--muted);white-space:nowrap">${fmtDate(t.d)}</td>
+      <td style="font-weight:600;color:var(--text)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${fu.color};margin-right:7px"></span>${fu.short}</td>
+      <td style="font-weight:700;color:var(--ok)">+${eur(t.amt)}</td>
+      <td style="color:var(--muted)">${fmtNum(t.p)}${estTag}</td>
+      <td style="color:var(--muted)">€${fmtNum(t.amt/t.p)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── SEGUNDO BRÓKER — SNAPSHOT (ximescanellas.com/inversiones, 09/08/2026) ──
+// Respaldo cuando el proxy no alcanza el dominio. Los datos en vivo lo sobreescriben.
+const XS_SNAPSHOT={
+  date:'09/08/2026',
+  benchmark:{cartera:38.2,msci_world:66.5,sp500:69.7},
+  cagr:{cartera:11.4,msci:18.5,sp500:19.3},
+  conc:{top1:15.3,top3:42.1,top5:61.1,effN:11},
+  positions:[
+    {n:'Vanguard S&P 500 UCITS',pct:15.3},
+    {n:'Alphabet Inc Class A',pct:13.0},
+    {n:'Apple Inc (USD)',pct:9.1},
+    {n:'iShares Physical Gold',pct:4.8},
+    {n:'VanEck Semiconductor',pct:2.6},
+    {n:'Telefónica SA',pct:2.2},
+    {n:'Realty Income Corp',pct:1.4},
+    {n:'Vanguard Emerging Markets',pct:1.2},
+    {n:'iShares Core S&P 500',pct:1.2},
+    {n:'Vanguard FTSE All-World',pct:1.1}
+  ]
+};
+
+function rInversiones(inv){
+  rMyInvestor();
+  rPensionPlan();
+
+  const live=inv&&inv.status==='ok'&&inv.benchmark&&Object.keys(inv.benchmark).length;
+  const d=live?inv:XS_SNAPSHOT;
+  const src=document.getElementById('inv-bench-src');
+  if(src)src.textContent=live?'en vivo · ximescanellas.com/inversiones':`snapshot manual del ${XS_SNAPSHOT.date}`;
+
+  const ret=d.benchmark.cartera||0, msci=d.benchmark.msci_world||0;
+  const sp500=d.benchmark.sp500||0, cagr=(d.cagr&&d.cagr.cartera)||0;
+  const pct=v=>(v>0?'+':'')+v+'%';
+  setKpi('inv-ret',pct(ret));setKpi('inv-msci',pct(msci));
+  setKpi('inv-sp500',pct(sp500));setKpi('inv-cagr',pct(cagr)+(cagr?'/año':''));
+
+  mk('ch-inv-bench','bar',{
+    labels:['Mi cartera','MSCI World','S&P 500'],
+    datasets:[{label:'Retorno 3a %',data:[ret,msci,sp500],backgroundColor:[CO+'88',ME+'88',ST+'88'],borderRadius:5}]
+  });
+
+  // Concentración y posiciones: en vivo si el proxy las trae, si no el snapshot
+  const conc=(live&&inv.conc)||XS_SNAPSHOT.conc;
+  const pos=(live&&inv.positions&&inv.positions.length)?inv.positions:XS_SNAPSHOT.positions;
+
+  mk('ch-inv-conc','doughnut',{
+    labels:[`Top 1 (${conc.top1}%)`,`Top 2-3 (${(conc.top3-conc.top1).toFixed(1)}%)`,`Top 4-5 (${(conc.top5-conc.top3).toFixed(1)}%)`,`Resto (${(100-conc.top5).toFixed(1)}%)`],
+    datasets:[{data:[conc.top1,+(conc.top3-conc.top1).toFixed(1),+(conc.top5-conc.top3).toFixed(1),+(100-conc.top5).toFixed(1)],
+      backgroundColor:[CO+'CC',ME+'CC',ST+'99','#9CA3AF55'],borderWidth:0,hoverOffset:5}]
+  },{plugins:{legend:{position:'bottom',labels:{color:'#9C8A84',font:{size:10},boxWidth:10}}}});
+
+  const badges=document.getElementById('inv-conc-badges');
+  if(badges)badges.innerHTML=
+    `<span class="bdg bc">Top 3: ${conc.top3}%${conc.top3>40?' ⚠️':''}</span> `+
+    `<span class="bdg bm">Top 5: ${conc.top5}%</span> `+
+    `<span class="bdg bg">Nº efectivo: ${conc.effN}</span>`;
+
+  const mxPct=pos[0]?pos[0].pct:1;
+  document.getElementById('inv-pos-tb').innerHTML=pos.map(p=>`<tr>
+    <td style="font-weight:600;color:var(--text)">${p.n}
+      <div style="background:var(--surface2);border-radius:4px;height:6px;margin-top:4px;max-width:340px"><div style="height:6px;border-radius:4px;background:${ME};width:${(p.pct/mxPct*100).toFixed(0)}%"></div></div>
+    </td>
+    <td style="text-align:right;font-weight:700;color:var(--coral);vertical-align:top">${p.pct.toFixed(1)}%</td>
+  </tr>`).join('');
+}
+
 function rStripe(stripe){
   if(stripe){
     setKpi('st-mrr',eur(stripe.mrr||0));
@@ -1363,6 +1691,18 @@ async function fetchStripeReal(){
   }catch(e){return null;}
 }
 
+// ── INVERSIONES ──
+async function fetchInversionesReal(){
+  const proxy=CFG.pU||'http://localhost:5050';
+  try{
+    const r=await fetch(`${proxy}/inversiones`);
+    if(!r.ok)return null;
+    const data=await r.json();
+    if(data.error){console.warn('Inversiones proxy:',data.error);return null;}
+    return data;
+  }catch(e){console.warn('Inversiones fetch error:',e);return null;}
+}
+
 // ── BOOT ──
 
 // ── TRAININGPEAKS — AIRTABLE ──
@@ -1447,7 +1787,7 @@ async function load(){
     d.cj.clients=0;d.cj.calls=0;d.s1.cli=0;d.s2.cli=0;d.s1.calls=0;d.s2.calls=0;
     d.cj.close=0;d.cj.cpa=0;d.cj.cac=0;
   }
-  const [rm,rg,rs]=await Promise.all([fetchMetaReal(),fetchGHLReal(),fetchStripeReal()]);
+  const [rm,rg,rs,ri]=await Promise.all([fetchMetaReal(),fetchGHLReal(),fetchStripeReal(),fetchInversionesReal()]);
 
   // Manejar token expirado
   const tokenBanner=document.getElementById('meta-token-banner');
@@ -1609,7 +1949,7 @@ async function load(){
     if(mb){mb.textContent='● EN VIVO';mb.className='mode live';}
   }
 
-  rConjunto(d);rS1(d);rS2(d);rIG(d);rMeta(d);rStripe(rs);
+  rConjunto(d);rS1(d);rS2(d);rIG(d);rMeta(d);rStripe(rs);rInversiones(ri);
   if(CFG.atT){fetchAirtable().then(atData=>{rTP(atData);});}else{rTP(null);}
   document.getElementById('lu').textContent=new Date().toLocaleTimeString('es');
 }
@@ -1627,7 +1967,8 @@ const TITLES={
   ig:['Instagram','Seguidores, DMs y crecimiento de cuenta'],
   meta:['Meta Ads','Campañas activas, gasto e impresiones'],
   stripe:['Stripe — Estrategas','Ingresos y pagos en tiempo real (datos reales)'],
-  tp:['TrainingPeaks — Clientes Activos','164 clientes activos · Conectado a Airtable']
+  tp:['TrainingPeaks — Clientes Activos','164 clientes activos · Conectado a Airtable'],
+  inv:['Inversiones','Análisis de cartera y benchmarks']
 };
 function nav(id,btn){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
