@@ -614,6 +614,18 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
       </table>
     </div>
 
+    <!-- Plan de pensiones — producto distinto, fuera del catálogo de fondos de MyInvestor -->
+    <div class="tc" id="pp-wrap">
+      <h3>🏦 Plan de Pensiones <small style="font-weight:400;color:var(--muted)">— MyInvestor Indexado S&P 500 PP, fuera del catálogo de fondos</small></h3>
+      <table>
+        <thead><tr><th>Fecha</th><th>Producto</th><th>Aportado</th></tr></thead>
+        <tbody id="pp-tb"></tbody>
+      </table>
+      <p style="font-size:11.5px;color:var(--muted);padding:0 18px 14px;line-height:1.6">
+        Un plan de pensiones tributa distinto a un fondo (rescate solo en jubilación u otras contingencias, y no es traspasable a un fondo indexado) — por eso va aparte. No está en el catálogo consultado para el resto de esta página, así que solo se muestra lo aportado; no hay NAV para calcular valor actual ni rentabilidad.
+      </p>
+    </div>
+
     <div class="tc">
       <h3>Historial de aportaciones <small style="font-weight:400;color:var(--muted)">— suscripciones puntuales</small></h3>
       <table>
@@ -1295,7 +1307,9 @@ const MI_TX=[
   {d:'2026-06-26',f:'europe',  amt:2000, p:47.83},
   {d:'2026-06-26',f:'smallcap',amt:2000, p:4.6},
   {d:'2026-06-27',f:'devworld',amt:900,  p:75},
+  {d:'2026-06-29',f:'smallcap',amt:195.68,p:0.45,est:true},
   {d:'2026-06-28',f:'vgem',    amt:250,  p:0.79},
+  {d:'2026-07-01',f:'vgem',    amt:248.84,p:0.79,est:true},
   {d:'2026-07-04',f:'devworld',amt:900,  p:74.69},
   {d:'2026-07-08',f:'smallcap',amt:200,  p:0.46},
   {d:'2026-07-11',f:'devworld',amt:900,  p:74.52},
@@ -1308,6 +1322,8 @@ const MI_TX=[
   {d:'2026-08-10',f:'smallcap',amt:200,   p:0.45},
   {d:'2026-08-12',f:'devworld',amt:900,   p:73.06},
   {d:'2026-08-12',f:'vgem',    amt:250,   p:0.82},
+  {d:'2026-08-18',f:'europe',  amt:300,   p:7.17,  est:true},
+  {d:'2026-08-18',f:'isem',    amt:300,   p:21.64, est:true},
   {d:'2026-08-24',f:'smallcap',amt:199.76,p:0.46},
   {d:'2026-09-03',f:'devworld',amt:1799.90,p:148.25},
   {d:'2026-09-07',f:'smallcap',amt:199.43,p:0.46},
@@ -1319,6 +1335,20 @@ const MI_TX=[
 const MI_MONTHS=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const fmtDate=iso=>{const[y,m,dd]=iso.split('-');return `${dd} ${MI_MONTHS[+m-1]} ${y}`};
 const fmtNum=(v,dec=2)=>Number(v).toLocaleString('es-ES',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+
+// ── PLAN DE PENSIONES — fuera del catálogo de fondos, sin NAV disponible ──
+const MI_PP_TX=[
+  {d:'2026-06-30',name:'MyInvestor Indexado S&P 500 PP',amt:150}
+];
+function rPensionPlan(){
+  const tb=document.getElementById('pp-tb');
+  if(!tb)return;
+  tb.innerHTML=[...MI_PP_TX].sort((a,b)=>b.d.localeCompare(a.d)).map(t=>`<tr>
+    <td style="color:var(--muted);white-space:nowrap">${fmtDate(t.d)}</td>
+    <td style="font-weight:600;color:var(--text)">${t.name}</td>
+    <td style="font-weight:700;color:var(--ok)">+${eur(t.amt)}</td>
+  </tr>`).join('');
+}
 
 function rMyInvestor(){
   const tx=[...MI_TX].sort((a,b)=>a.d.localeCompare(b.d));
@@ -1396,11 +1426,12 @@ function rMyInvestor(){
   // ── Historial (más reciente primero) ──
   document.getElementById('inv-tx-tb').innerHTML=[...tx].reverse().map(t=>{
     const fu=MI_FUNDS[t.f];
+    const estTag=t.est?' <span title="Participaciones estimadas por interpolación de VL — el movimiento de cuenta no muestra participaciones" style="color:var(--warn);cursor:help">≈</span>':'';
     return `<tr>
       <td style="color:var(--muted);white-space:nowrap">${fmtDate(t.d)}</td>
       <td style="font-weight:600;color:var(--text)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${fu.color};margin-right:7px"></span>${fu.short}</td>
       <td style="font-weight:700;color:var(--ok)">+${eur(t.amt)}</td>
-      <td style="color:var(--muted)">${fmtNum(t.p)}</td>
+      <td style="color:var(--muted)">${fmtNum(t.p)}${estTag}</td>
       <td style="color:var(--muted)">€${fmtNum(t.amt/t.p)}</td>
     </tr>`;
   }).join('');
@@ -1429,6 +1460,7 @@ const XS_SNAPSHOT={
 
 function rInversiones(inv){
   rMyInvestor();
+  rPensionPlan();
 
   const live=inv&&inv.status==='ok'&&inv.benchmark&&Object.keys(inv.benchmark).length;
   const d=live?inv:XS_SNAPSHOT;
