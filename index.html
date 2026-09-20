@@ -1266,18 +1266,18 @@ function rMeta(d){
 // ISIN/TER/NAV verificados contra el catálogo de MyInvestor. Cada fondo se
 // identificó cruzando el NAV del catálogo con el VL implícito (importe/participaciones)
 // de las suscripciones. NAV a fecha MI_NAV_DATE.
-const MI_NAV_DATE='14/08/2026';
+const MI_NAV_DATE='17/09/2026';
 const MI_FUNDS={
   devworld:{name:'iShares Developed World ESG Screened Index Fund (IE) D Acc EUR',short:'iShares Dev. World ESG',
-            isin:'IE000N51F726',ter:0.15,nav:12.359,  idx:'MSCI World Screened',tech:29.00,color:ME},
+            isin:'IE000N51F726',ter:0.15,nav:12.199,  idx:'MSCI World Screened',tech:33.37,color:ME},
   isem    :{name:'iShares Emerging Markets Index Fund (IE) Acc EUR clase S',short:'iShares Emerging Mkts',
-            isin:'IE000QAZP7L2',ter:0.16,nav:13.813,  idx:'MSCI Emerging Markets',tech:44.24,color:OK},
+            isin:'IE000QAZP7L2',ter:0.16,nav:13.849,  idx:'MSCI Emerging Markets',tech:42.43,color:OK},
   europe  :{name:'Vanguard European Stock Index Fund EUR Acc',short:'Vanguard European Stock',
-            isin:'IE0007987708',ter:0.12,nav:43.2756, idx:'MSCI Europe',tech:10.14,color:ST},
+            isin:'IE0007987708',ter:0.12,nav:42.2615, idx:'MSCI Europe',tech:9.20,color:ST},
   smallcap:{name:'Vanguard Global Small-Cap Index Fund EUR Acc',short:'Vanguard Global Small-Cap',
-            isin:'IE00B42W4L06',ter:0.30,nav:442.457, idx:'MSCI World Small Cap',tech:16.57,color:CO},
+            isin:'IE00B42W4L06',ter:0.30,nav:426.8515,idx:'MSCI World Small Cap',tech:15.19,color:CO},
   vgem    :{name:'Vanguard Emerging Markets Stock Index Fund EUR Acc',short:'Vanguard Emerging Mkts',
-            isin:'IE0031786696',ter:0.23,nav:308.4714,idx:'MSCI Emerging Markets',tech:45.90,color:WA}
+            isin:'IE0031786696',ter:0.23,nav:309.3103,idx:'MSCI Emerging Markets',tech:41.99,color:WA}
 };
 
 // ── MYINVESTOR — APORTACIONES (suscripciones finalizadas) ──
@@ -1304,7 +1304,16 @@ const MI_TX=[
   {d:'2026-07-22',f:'smallcap',amt:200,  p:0.46},
   {d:'2026-07-25',f:'devworld',amt:900,  p:75.05},
   {d:'2026-07-26',f:'vgem',    amt:250,  p:0.85},
-  {d:'2026-08-01',f:'devworld',amt:900,  p:73.24}
+  {d:'2026-08-01',f:'devworld',amt:900,  p:73.24},
+  {d:'2026-08-10',f:'smallcap',amt:200,   p:0.45},
+  {d:'2026-08-12',f:'devworld',amt:900,   p:73.06},
+  {d:'2026-08-12',f:'vgem',    amt:250,   p:0.81,   est:true},
+  {d:'2026-08-24',f:'smallcap',amt:199.76,p:0.46},
+  {d:'2026-09-03',f:'devworld',amt:1799.90,p:146.75,est:true},
+  {d:'2026-09-07',f:'smallcap',amt:199.43,p:0.46},
+  {d:'2026-09-16',f:'isem',    amt:299.92,p:21.66,  est:true},
+  {d:'2026-09-17',f:'europe',  amt:299.99,p:7.10,   est:true},
+  {d:'2026-09-17',f:'devworld',amt:1799.88,p:147.54,est:true}
 ];
 
 const MI_MONTHS=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -1387,11 +1396,12 @@ function rMyInvestor(){
   // ── Historial (más reciente primero) ──
   document.getElementById('inv-tx-tb').innerHTML=[...tx].reverse().map(t=>{
     const fu=MI_FUNDS[t.f];
+    const estTag=t.est?' <span title="Participaciones estimadas por interpolación de VL — la app mostraba el valor cortado" style="color:var(--warn);cursor:help">≈</span>':'';
     return `<tr>
       <td style="color:var(--muted);white-space:nowrap">${fmtDate(t.d)}</td>
       <td style="font-weight:600;color:var(--text)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${fu.color};margin-right:7px"></span>${fu.short}</td>
       <td style="font-weight:700;color:var(--ok)">+${eur(t.amt)}</td>
-      <td style="color:var(--muted)">${fmtNum(t.p)}</td>
+      <td style="color:var(--muted)">${fmtNum(t.p)}${estTag}</td>
       <td style="color:var(--muted)">€${fmtNum(t.amt/t.p)}</td>
     </tr>`;
   }).join('');
