@@ -1307,13 +1307,13 @@ const MI_TX=[
   {d:'2026-08-01',f:'devworld',amt:900,  p:73.24},
   {d:'2026-08-10',f:'smallcap',amt:200,   p:0.45},
   {d:'2026-08-12',f:'devworld',amt:900,   p:73.06},
-  {d:'2026-08-12',f:'vgem',    amt:250,   p:0.81,   est:true},
+  {d:'2026-08-12',f:'vgem',    amt:250,   p:0.82},
   {d:'2026-08-24',f:'smallcap',amt:199.76,p:0.46},
-  {d:'2026-09-03',f:'devworld',amt:1799.90,p:146.75,est:true},
+  {d:'2026-09-03',f:'devworld',amt:1799.90,p:148.25},
   {d:'2026-09-07',f:'smallcap',amt:199.43,p:0.46},
-  {d:'2026-09-16',f:'isem',    amt:299.92,p:21.66,  est:true},
-  {d:'2026-09-17',f:'europe',  amt:299.99,p:7.10,   est:true},
-  {d:'2026-09-17',f:'devworld',amt:1799.88,p:147.54,est:true}
+  {d:'2026-09-16',f:'isem',    amt:299.92,p:21.87},
+  {d:'2026-09-17',f:'europe',  amt:299.99,p:7.16},
+  {d:'2026-09-17',f:'devworld',amt:1799.88,p:149.46}
 ];
 
 const MI_MONTHS=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -1396,12 +1396,11 @@ function rMyInvestor(){
   // ── Historial (más reciente primero) ──
   document.getElementById('inv-tx-tb').innerHTML=[...tx].reverse().map(t=>{
     const fu=MI_FUNDS[t.f];
-    const estTag=t.est?' <span title="Participaciones estimadas por interpolación de VL — la app mostraba el valor cortado" style="color:var(--warn);cursor:help">≈</span>':'';
     return `<tr>
       <td style="color:var(--muted);white-space:nowrap">${fmtDate(t.d)}</td>
       <td style="font-weight:600;color:var(--text)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${fu.color};margin-right:7px"></span>${fu.short}</td>
       <td style="font-weight:700;color:var(--ok)">+${eur(t.amt)}</td>
-      <td style="color:var(--muted)">${fmtNum(t.p)}${estTag}</td>
+      <td style="color:var(--muted)">${fmtNum(t.p)}</td>
       <td style="color:var(--muted)">€${fmtNum(t.amt/t.p)}</td>
     </tr>`;
   }).join('');
