@@ -97,7 +97,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',syste
 .cc{background:var(--surface);border:1.5px solid var(--borderL);border-radius:var(--r);padding:18px 20px;box-shadow:var(--sh)}
 .cc h3{font-size:13px;font-weight:700;color:var(--text);margin-bottom:13px}
 .cc h3 small{color:var(--muted);font-weight:400;font-size:11px;margin-left:5px}
-.cw{position:relative}.h220{height:220px}.h250{height:250px}.h200{height:200px}.h180{height:180px}
+.cw{position:relative}.cw canvas{max-width:100%}.h220{height:220px}.h250{height:250px}.h200{height:200px}.h180{height:180px}
 
 /* FUNNEL */
 .fv{padding:6px 0}
@@ -177,6 +177,14 @@ hr.dv{border:none;border-top:1.5px solid var(--borderL);margin:18px 0}
   .g2,.g3,.g3r,.sc2{grid-template-columns:1fr}
   .kpi-g{grid-template-columns:repeat(2,1fr)}
   .highlight-row{grid-template-columns:repeat(2,1fr)}
+  .tc table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+}
+@media(max-width:520px){
+  .topbar{flex-wrap:wrap;row-gap:10px}
+  .topbar-r{width:100%;flex-wrap:wrap;justify-content:flex-start}
+  .date-range{flex:1 1 auto;min-width:0}
+  .date-range input[type=date]{width:auto;min-width:0;flex:1}
+  .ref-btn{flex:1 1 auto;justify-content:center}
 }
 </style>
 </head>
